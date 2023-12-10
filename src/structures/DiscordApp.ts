@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { ApplicationCommandOption, ChatInputCommandInteraction, Client, ClientEvents, Interaction, REST, RESTPostAPIApplicationCommandsJSONBody, Routes, SlashCommandBuilder } from "discord.js";
-import {  DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModule";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_EXTERNAL_EVENTS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY } from "./decorators/Constants";
-import { InteractionType, SlashCommandOptions } from "./Constants";
+import {  DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY } from "./decorators/Constants";
+import { InteractionType } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
 
 export interface Logger {
