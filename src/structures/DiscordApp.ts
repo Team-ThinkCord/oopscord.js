@@ -30,8 +30,8 @@ export class BaseDiscordModule {
         this.client = client;
     }
 
-    /** Dummy. Override it. */
-    onReady() {
+    /** Dummy. */
+    _onReady() {
 
     }
 }
@@ -205,6 +205,8 @@ export class DiscordApp {
         internalEvents.forEach(e => {
             this.#client.on(e.eventName, module[e.methodName as keyof typeof module]!!);
         });
+
+        if (!this.#moduleOptions.noAutoHandle) this.#client.on("interactionCreate", this.#autoHandler);
     }
 
     #setModule(discordModule: new (client: Client) => BaseDiscordModule) {
@@ -223,6 +225,8 @@ export class DiscordApp {
         app.#setModule(discordModule);
         app.#setOptions(options);
         app.#init();
+
+        return app;
     }
 }
 
