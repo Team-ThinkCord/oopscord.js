@@ -1,6 +1,6 @@
 {
   "name": "tdis",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A lightweight, easy command handler.",
   "main": "dist",
   "scripts": {
