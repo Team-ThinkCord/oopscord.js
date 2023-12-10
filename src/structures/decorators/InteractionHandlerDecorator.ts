@@ -7,7 +7,7 @@ export function Run<T>(target: Object, propertyKey: string | symbol, propertyDes
 
 // Injection
 export function Interaction(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-    const constructor = target.constructor; // 이게 클래스
+    const constructor = target; // 이게 클래스
 
 
     /*

@@ -206,7 +206,7 @@ export class DiscordApp {
             this.#client.on(e.eventName, module[e.methodName as keyof typeof module]!!);
         });
 
-        if (!this.#moduleOptions.noAutoHandle) this.#client.on("interactionCreate", this.#autoHandler);
+        if (!this.#moduleOptions.noAutoHandle) this.#client.on("interactionCreate", (itr) => this.#autoHandler(itr));
     }
 
     #setModule(discordModule: new (client: Client) => BaseDiscordModule) {

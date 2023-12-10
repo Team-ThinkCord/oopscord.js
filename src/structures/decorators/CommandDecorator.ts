@@ -20,7 +20,7 @@ export function Command(option: CommandOption): ClassDecorator {
     }
 }
 
-export function SubCommand(option: CommandOption): ClassDecorator {
+export function Subcommand(option: CommandOption): ClassDecorator {
     return function<TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CHAT_INPUT_COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
@@ -303,7 +303,7 @@ export function AttachmentOption(option: BaseOption) {
 
 export function StringOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getString", index: parameterIndex });
@@ -314,7 +314,7 @@ export function StringOptionInjection(name: string) {
 
 export function IntegerOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getInteger", index: parameterIndex });
@@ -325,7 +325,7 @@ export function IntegerOptionInjection(name: string) {
 
 export function NumberOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getNumber", index: parameterIndex });
@@ -336,7 +336,7 @@ export function NumberOptionInjection(name: string) {
 
 export function BooleanOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getBoolean", index: parameterIndex });
@@ -347,7 +347,7 @@ export function BooleanOptionInjection(name: string) {
 
 export function UserOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getUser", index: parameterIndex });
@@ -358,7 +358,7 @@ export function UserOptionInjection(name: string) {
 
 export function ChannelOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getChannel", index: parameterIndex });
@@ -369,7 +369,7 @@ export function ChannelOptionInjection(name: string) {
 
 export function RoleOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getRole", index: parameterIndex });
@@ -380,7 +380,7 @@ export function RoleOptionInjection(name: string) {
 
 export function MentionableOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getMentionable", index: parameterIndex });
@@ -391,7 +391,7 @@ export function MentionableOptionInjection(name: string) {
 
 export function AttachmentOptionInjection(name: string) {
     return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const constructor = target.constructor;
+        const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
         optionsIndexArray.push({ name, getMethod: "getAttachment", index: parameterIndex });
