@@ -1,0 +1,33 @@
+{
+  "name": "tdis",
+  "version": "0.0.4",
+  "description": "A lightweight, easy command handler.",
+  "main": "dist",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "tsc"
+  },
+  "repository": "git+https://github.com/Team-ThinkCord/tDis.git",
+  "keywords": [
+    "discord",
+    "discord.js",
+    "command",
+    "handler",
+    "commandhandler"
+  ],
+  "author": "Team-ThinkCord",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Team-ThinkCord/tDis/issues"
+  },
+  "homepage": "https://github.com/Team-ThinkCord/tDis#readme",
+  "private": false,
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "reflect-metadata": "^0.1.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "yarn": "^1.22.21"
+  }
+}
