@@ -38,7 +38,7 @@ export function DiscordModule(option1: ModuleOptions) {
         const options = mergeDefault(defaultModuleOptions, option1);
 
         options.imports.forEach(module => {
-            if (!Reflect.getMetadata(MODULE_TYPE_KEY, module)) throw new TypeError(`${module.name} is not a module.`);
+            if (typeof Reflect.getMetadata(MODULE_TYPE_KEY, module) != "number") throw new TypeError(`${module.name} is not a module.`);
         });
 
         Reflect.defineMetadata(DICSORD_MODULE_OPTIONS_KEY, options, constructor);
