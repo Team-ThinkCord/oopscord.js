@@ -1,6 +1,6 @@
 {
   "name": "oopscord.js",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "An easy way to make discord apps in typescript.",
   "main": "dist",
   "scripts": {
