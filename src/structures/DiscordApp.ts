@@ -1,7 +1,6 @@
-import "reflect-metadata";
 import { ApplicationCommandOption, ChatInputCommandInteraction, Client, ClientEvents, Interaction, REST, RESTPostAPIApplicationCommandsJSONBody, Routes, SlashCommandBuilder } from "discord.js";
 import {  DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY } from "./decorators/Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY } from "./decorators/Constants";
 import { InteractionType } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
 
@@ -25,9 +24,11 @@ const defaultDiscordAppOptions: DiscordAppOptions = {
 
 export class BaseDiscordModule {
     client: Client;
+    logger: Logger;
 
-    constructor(client: Client) {
+    constructor(client: Client, logger: Logger) {
         this.client = client;
+        this.logger = logger;
     }
 
     /** Dummy. */
@@ -41,10 +42,11 @@ let a1 = false;
 export class DiscordApp {
     #rest: REST;
     #client!: Client;
-    #moduleFunction!: new (client: Client) => BaseDiscordModule;
+    #moduleFunction!: typeof BaseDiscordModule;
     #module!: BaseDiscordModule & { [key in keyof ClientEvents]?: ClientEvents[key] };
     #appOptions!: DiscordAppOptions;
     #moduleOptions!: ModuleOptions;
+    #commands!: (new (...args: any[]) => any)[];
 
     constructor() {
         if (!a1) throw new ReferenceError("Please use DiscordApp.create()");
@@ -60,7 +62,7 @@ export class DiscordApp {
         await this.#client.login(this.#moduleOptions.token);
 
         try {
-            const commands = this.#moduleOptions.imports.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND);
+            const commands = this.#commands.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND);
             const privateCommands = commands.filter(c => Reflect.getMetadata(COMMAND_PRIVATE_KEY, c));
             const globalCommands = commands.filter(c => !Reflect.getMetadata(COMMAND_PRIVATE_KEY, c));
 
@@ -127,8 +129,8 @@ export class DiscordApp {
         }
     }
 
-    chatInputCommandHandler(itr: ChatInputCommandInteraction) {
-        const commands = this.#moduleOptions.imports.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND);
+    #chatInputCommandHandler(itr: ChatInputCommandInteraction) {
+        const commands = this.#commands.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND);
 
         const commandName = itr.commandName;
         const command = commands.find(c => Reflect.getMetadata(COMMAND_NAME_KEY, c) == commandName);
@@ -187,7 +189,7 @@ export class DiscordApp {
 
     #autoHandler(itr: Interaction) {
         if (itr.isChatInputCommand()) {
-            this.chatInputCommandHandler(itr);
+            this.#chatInputCommandHandler(itr);
         }
     }
 
@@ -197,7 +199,7 @@ export class DiscordApp {
         // const externalEvents = Reflect.getMetadata(DISCORD_MODULE_EXTERNAL_EVENTS_KEY, this.#moduleFunction) as ExternalModuleEvents[];
 
         this.#client = new Client(options);
-        this.#module = new this.#moduleFunction(this.#client);
+        this.#module = new this.#moduleFunction(this.#client, this.#appOptions.logger!);
         this.#moduleOptions = options;
 
         const module = this.#module as { [key: string]: any };
@@ -206,10 +208,22 @@ export class DiscordApp {
             this.#client.on(e.eventName, module[e.methodName as keyof typeof module]!!);
         });
 
-        if (!this.#moduleOptions.noAutoHandle) this.#client.on("interactionCreate", (itr) => this.#autoHandler(itr));
+        this.#client.on("interactionCreate", (itr) => this.#autoHandler(itr));
+
+        this.#moduleOptions.imports.forEach(module => {
+            const moduleType = Reflect.getMetadata(MODULE_TYPE_KEY, module);
+
+            switch (moduleType) {
+                case ModuleType.COMMAND:
+                    if (!this.#commands) this.#commands = [];
+                    this.#commands.push(Reflect.getMetadata(COMMAND_MODULE_COMMANDS_KEY, module));
+
+                    break;
+            }
+        });
     }
 
-    #setModule(discordModule: new (client: Client) => BaseDiscordModule) {
+    #setModule(discordModule: typeof BaseDiscordModule) {
         this.#moduleFunction = discordModule as (new (client: Client) => BaseDiscordModule);
     }
 
@@ -217,7 +231,7 @@ export class DiscordApp {
         this.#appOptions = mergeDefault(defaultDiscordAppOptions, options);
     }
 
-    static create(discordModule: new (client: Client) => BaseDiscordModule, options: DiscordAppOptions) {
+    static create(discordModule: typeof BaseDiscordModule, options: DiscordAppOptions = {}) {
         a1 = true;
 
         const app = new DiscordApp();

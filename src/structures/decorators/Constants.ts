@@ -1,3 +1,7 @@
+export const MODULE_TYPE_KEY = Symbol("type");
+
+export const COMMAND_MODULE_COMMANDS_KEY = Symbol("commands");
+
 export const INTERACTION_RUN_METHOD_KEY = Symbol("run_method");
 export const INTERACTION_PARAMETER_INDEX_KEY = Symbol("interaction_parameter_index");
 export const INTERACTION_TYPE_KEY = Symbol("type");
@@ -13,3 +17,12 @@ export const OPTIONS_PARAMETER_INDEX_KEY = Symbol("options_parameter_index");
 export const DICSORD_MODULE_OPTIONS_KEY = Symbol("options");
 export const DISCORD_MODULE_INTERNAL_EVENTS_KEY = Symbol("internal_events");
 export const DISCORD_MODULE_EXTERNAL_EVENTS_KEY = Symbol("external_events");
+
+export const BUTTON_OPTIONS_KEY = Symbol("options");
+
+export const SELECT_MENU_OPTIONS_KEY = Symbol("options");
+
+export enum ModuleType {
+    COMMAND,
+    MESSAGE_COMPONENT
+}

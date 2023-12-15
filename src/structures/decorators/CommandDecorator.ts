@@ -1,18 +1,26 @@
-import "reflect-metadata";
 import { APIApplicationCommandOptionChoice, ApplicationCommandOption, ApplicationCommandOptionAllowedChannelTypes, ChannelType, CommandInteractionOptionResolver, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder, SlashCommandUserOption, ToAPIApplicationCommandOptions } from "discord.js";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_GUILD_KEY, COMMAND_PRIVATE_KEY, COMMAND_OPTIONS_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_TYPE_KEY, COMMAND_SUBCOMMANDS_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY } from "./Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_GUILD_KEY, COMMAND_PRIVATE_KEY, COMMAND_OPTIONS_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_TYPE_KEY, COMMAND_SUBCOMMANDS_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY } from "./Constants";
 import { InteractionType, SlashCommandOptions } from "../Constants";
 
-export type CommandOption = { name: string, description: string }
-export type BaseOption = { name: string, description: string, required?: boolean }
-export type OptionWithChoices<ValueType extends (string | number)> = BaseOption & { choices: APIApplicationCommandOptionChoice<ValueType>[] }
-export type StringOption = BaseOption & { minLength?: number, maxLength?: number, autocomplete?: boolean }
-export type NumericOption = BaseOption & { minValue?: number, maxValue?: number, autocomplete?: boolean }
-export type ChannelOption = BaseOption & { channelTypes: ApplicationCommandOptionAllowedChannelTypes[] }
+export type CommandModuleOptions = { commands: (new (...args: any[]) => any)[] }
+export type CommandOptions = { name: string, description: string }
+export type BaseOptions = { name: string, description: string, required?: boolean }
+export type OptionWithChoices<ValueType extends (string | number)> = BaseOptions & { choices: APIApplicationCommandOptionChoice<ValueType>[] }
+export type StringOptions = BaseOptions & { minLength?: number, maxLength?: number, autocomplete?: boolean }
+export type NumericOptions = BaseOptions & { minValue?: number, maxValue?: number, autocomplete?: boolean }
+export type ChannelOptions = BaseOptions & { channelTypes: ApplicationCommandOptionAllowedChannelTypes[] }
 export type OptionsIndex = { name: string, getMethod: keyof Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, index: number };
 
+// CommandModule decorator
+export function CommandModule(options: CommandModuleOptions): ClassDecorator {
+    return function<TFunction extends Function>(constructor: TFunction) {
+        Reflect.defineMetadata(MODULE_TYPE_KEY, ModuleType.COMMAND, constructor);
+        Reflect.defineMetadata(COMMAND_MODULE_COMMANDS_KEY, options.commands, constructor);
+    }
+}
+
 // Define command
-export function Command(option: CommandOption): ClassDecorator {
+export function Command(option: CommandOptions): ClassDecorator {
     return function<TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CHAT_INPUT_COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
@@ -20,7 +28,7 @@ export function Command(option: CommandOption): ClassDecorator {
     }
 }
 
-export function Subcommand(option: CommandOption): ClassDecorator {
+export function Subcommand(option: CommandOptions): ClassDecorator {
     return function<TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CHAT_INPUT_COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
@@ -61,7 +69,7 @@ export function AddSubcommand(subcommand: Function) {
     }
 }
 
-export function AddSubcommandGroup(option: BaseOption, ...subcommands: Function[]) {
+export function AddSubcommandGroup(option: BaseOptions, ...subcommands: Function[]) {
     return function<T extends Function>(constructor: T) {
         const options: ToAPIApplicationCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
         const subcommandGroups: { [groupName: string]: Function[] } = Reflect.getMetadata(COMMAND_SUBCOMMAND_GROUPS_KEY, constructor) || {};
@@ -96,7 +104,7 @@ export function AddSubcommandGroup(option: BaseOption, ...subcommands: Function[
     }
 }
 
-export function StringOption(option: StringOption): ClassDecorator {
+export function StringOption(option: StringOptions): ClassDecorator {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -130,7 +138,7 @@ export function StringOptionWithChoices(option: OptionWithChoices<string>): Clas
     }
 }
 
-export function IntegerOption(option: NumericOption): ClassDecorator {
+export function IntegerOption(option: NumericOptions): ClassDecorator {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -164,7 +172,7 @@ export function IntegerOptionWithChoices(option: OptionWithChoices<number>): Cla
     }
 }
 
-export function NumberOption(option: NumericOption): ClassDecorator {
+export function NumberOption(option: NumericOptions): ClassDecorator {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -198,7 +206,7 @@ export function NumberOptionWithChoices(option: OptionWithChoices<number>): Clas
     }
 }
 
-export function BooleanOption(option: BaseOption) {
+export function BooleanOption(option: BaseOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -213,7 +221,7 @@ export function BooleanOption(option: BaseOption) {
     }
 }
 
-export function UserOption(option: BaseOption) {
+export function UserOption(option: BaseOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -228,7 +236,7 @@ export function UserOption(option: BaseOption) {
     }
 }
 
-export function ChannelOption(option: ChannelOption) {
+export function ChannelOption(option: ChannelOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -254,7 +262,7 @@ export function ChannelOption(option: ChannelOption) {
     }
 }
 
-export function RoleOption(option: BaseOption) {
+export function RoleOption(option: BaseOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -269,7 +277,7 @@ export function RoleOption(option: BaseOption) {
     }
 }
 
-export function MentionableOption(option: BaseOption) {
+export function MentionableOption(option: BaseOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
@@ -284,7 +292,7 @@ export function MentionableOption(option: BaseOption) {
     }
 }
 
-export function AttachmentOption(option: BaseOption) {
+export function AttachmentOption(option: BaseOptions) {
     return function<T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 

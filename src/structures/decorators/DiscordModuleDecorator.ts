@@ -1,6 +1,5 @@
-import "reflect-metadata";
 import { ClientEvents, ClientOptions } from "discord.js";
-import { DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY } from "./Constants";
+import { DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, MODULE_TYPE_KEY } from "./Constants";
 
 export interface ModuleOptions extends ClientOptions {
     token: string;
@@ -9,7 +8,6 @@ export interface ModuleOptions extends ClientOptions {
         enable: boolean,
         guild: null | string
     };
-    noAutoHandle?: boolean;
     disableCache?: boolean;
 }
 
@@ -20,7 +18,6 @@ export const defaultModuleOptions: ModuleOptions = {
         enable: false,
         guild: null as string | null,
     },
-    noAutoHandle: false,
     disableCache: false,
     intents: []
 }
@@ -39,6 +36,10 @@ export interface DiscordModuleEvents {
 export function DiscordModule(option1: ModuleOptions) {
     return function<TFunction extends Function>(constructor: TFunction) {
         const options = mergeDefault(defaultModuleOptions, option1);
+
+        options.imports.forEach(module => {
+            if (!Reflect.getMetadata(MODULE_TYPE_KEY, module)) throw new TypeError(`${module.name} is not a module.`);
+        });
 
         Reflect.defineMetadata(DICSORD_MODULE_OPTIONS_KEY, options, constructor);
     }

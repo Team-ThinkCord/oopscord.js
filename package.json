@@ -1,7 +1,7 @@
 {
-  "name": "tdis",
+  "name": "oopscord.js",
   "version": "0.0.4",
-  "description": "A lightweight, easy command handler.",
+  "description": "An easy way to make discord apps in typescript.",
   "main": "dist",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
