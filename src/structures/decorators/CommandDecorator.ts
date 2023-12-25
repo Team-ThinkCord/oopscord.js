@@ -135,7 +135,8 @@ export function StringOptionWithChoices(option: OptionWithChoices<string>): Clas
         );
 
         Reflect.defineMetadata(COMMAND_OPTIONS_KEY, options, constructor);
-    }
+            
+    } // 이제 반년 쓴 인공지능 목소리 됨 좋다
 }
 
 export function IntegerOption(option: NumericOptions): ClassDecorator {

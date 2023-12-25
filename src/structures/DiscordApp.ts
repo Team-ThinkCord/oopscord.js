@@ -216,7 +216,7 @@ export class DiscordApp {
             switch (moduleType) {
                 case ModuleType.COMMAND:
                     if (!this.#commands) this.#commands = [];
-                    this.#commands.push(Reflect.getMetadata(COMMAND_MODULE_COMMANDS_KEY, module));
+                    this.#commands.push(...Reflect.getMetadata(COMMAND_MODULE_COMMANDS_KEY, module));
 
                     break;
             }
