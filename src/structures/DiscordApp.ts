@@ -137,7 +137,7 @@ export class DiscordApp {
 
         if (!command) return;
 
-        if (itr.options.getSubcommandGroup()) {
+        if (itr.options.getSubcommandGroup(false)) {
             let handler = (Reflect.getMetadata(COMMAND_SUBCOMMAND_GROUPS_KEY, command)[itr.options.getSubcommandGroup(true)] as Array<(new (...args: any[]) => any)>)?.find(c => Reflect.getMetadata(COMMAND_NAME_KEY, c) == itr.options.getSubcommand(true));
 
             if (!handler) return;
@@ -154,7 +154,7 @@ export class DiscordApp {
             let cmd = new handler(...args);
 
             cmd[runMethod]();
-        } else if (itr.options.getSubcommand()) {
+        } else if (itr.options.getSubcommand(false)) {
             let handler = (Reflect.getMetadata(COMMAND_SUBCOMMANDS_KEY, command) as (new (...args: any[]) => any)[]).find(c => Reflect.getMetadata(COMMAND_NAME_KEY, c) == itr.options.getSubcommand(true));
 
             if (!handler) return;
