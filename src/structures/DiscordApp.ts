@@ -207,7 +207,7 @@ export class DiscordApp {
         const module = this.#module as { [key: string]: any };
 
         internalEvents.forEach(e => {
-            this.#client.on(e.eventName, module[e.methodName as keyof typeof module]!!);
+            this.#client.on(e.eventName, (...args: any[]) => module[e.methodName as keyof typeof module](...args));
         });
 
         this.#client.on("interactionCreate", (itr) => this.#autoHandler(itr));
