@@ -13,7 +13,7 @@ export type OptionsIndex = { name: string, getMethod: keyof Omit<CommandInteract
 
 // CommandModule decorator
 export function CommandModule(options: CommandModuleOptions): ClassDecorator {
-    return function<TFunction extends Function>(constructor: TFunction) {
+    return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(MODULE_TYPE_KEY, ModuleType.COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_MODULE_COMMANDS_KEY, options.commands, constructor);
     }
@@ -21,7 +21,7 @@ export function CommandModule(options: CommandModuleOptions): ClassDecorator {
 
 // Define command
 export function Command(option: CommandOptions): ClassDecorator {
-    return function<TFunction extends Function>(constructor: TFunction) {
+    return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CHAT_INPUT_COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
         Reflect.defineMetadata(COMMAND_DESCRIPTION_KEY, option.description, constructor);
@@ -29,7 +29,7 @@ export function Command(option: CommandOptions): ClassDecorator {
 }
 
 export function Subcommand(option: CommandOptions): ClassDecorator {
-    return function<TFunction extends Function>(constructor: TFunction) {
+    return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CHAT_INPUT_COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
         Reflect.defineMetadata(COMMAND_DESCRIPTION_KEY, option.description, constructor);
@@ -39,7 +39,7 @@ export function Subcommand(option: CommandOptions): ClassDecorator {
 export function Private(isPrivate: boolean = true, guild?: string) {
     if (isPrivate && !guild) throw new TypeError("You must provide guild id if isPrivate is true.");
 
-    return function<TFunction extends Function>(constructor: TFunction) {
+    return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(COMMAND_PRIVATE_KEY, isPrivate, constructor);
         Reflect.defineMetadata(COMMAND_PRIVATE_GUILD_KEY, guild, constructor);
     }
@@ -47,7 +47,7 @@ export function Private(isPrivate: boolean = true, guild?: string) {
 
 // Options
 export function AddSubcommand(subcommand: Function) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: ToAPIApplicationCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
         const subcommands: Function[] = Reflect.getMetadata(COMMAND_SUBCOMMANDS_KEY, constructor) || [];
 
@@ -58,7 +58,7 @@ export function AddSubcommand(subcommand: Function) {
         const data = new SlashCommandSubcommandBuilder()
             .setName(name)
             .setDescription(description);
-        
+
         Reflect.set(data, "options", options1);
 
         options.push(data);
@@ -70,7 +70,7 @@ export function AddSubcommand(subcommand: Function) {
 }
 
 export function AddSubcommandGroup(option: BaseOptions, ...subcommands: Function[]) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: ToAPIApplicationCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
         const subcommandGroups: { [groupName: string]: Function[] } = Reflect.getMetadata(COMMAND_SUBCOMMAND_GROUPS_KEY, constructor) || {};
 
@@ -78,7 +78,7 @@ export function AddSubcommandGroup(option: BaseOptions, ...subcommands: Function
             const name: string = Reflect.getMetadata(COMMAND_NAME_KEY, subcommand);
             const description: string = Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, subcommand);
             const options1: ToAPIApplicationCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, subcommand) ?? [];
-    
+
             const data = new SlashCommandSubcommandBuilder()
                 .setName(name)
                 .setDescription(description);
@@ -105,7 +105,7 @@ export function AddSubcommandGroup(option: BaseOptions, ...subcommands: Function
 }
 
 export function StringOption(option: StringOptions): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -123,7 +123,7 @@ export function StringOption(option: StringOptions): ClassDecorator {
 }
 
 export function StringOptionWithChoices(option: OptionWithChoices<string>): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -135,12 +135,12 @@ export function StringOptionWithChoices(option: OptionWithChoices<string>): Clas
         );
 
         Reflect.defineMetadata(COMMAND_OPTIONS_KEY, options, constructor);
-            
-    } // 이제 반년 쓴 인공지능 목소리 됨 좋다
+
+    }
 }
 
 export function IntegerOption(option: NumericOptions): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -158,7 +158,7 @@ export function IntegerOption(option: NumericOptions): ClassDecorator {
 }
 
 export function IntegerOptionWithChoices(option: OptionWithChoices<number>): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -174,7 +174,7 @@ export function IntegerOptionWithChoices(option: OptionWithChoices<number>): Cla
 }
 
 export function NumberOption(option: NumericOptions): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -192,7 +192,7 @@ export function NumberOption(option: NumericOptions): ClassDecorator {
 }
 
 export function NumberOptionWithChoices(option: OptionWithChoices<number>): ClassDecorator {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -208,7 +208,7 @@ export function NumberOptionWithChoices(option: OptionWithChoices<number>): Clas
 }
 
 export function BooleanOption(option: BaseOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -223,7 +223,7 @@ export function BooleanOption(option: BaseOptions) {
 }
 
 export function UserOption(option: BaseOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -238,7 +238,7 @@ export function UserOption(option: BaseOptions) {
 }
 
 export function ChannelOption(option: ChannelOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -264,7 +264,7 @@ export function ChannelOption(option: ChannelOptions) {
 }
 
 export function RoleOption(option: BaseOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -279,7 +279,7 @@ export function RoleOption(option: BaseOptions) {
 }
 
 export function MentionableOption(option: BaseOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -294,7 +294,7 @@ export function MentionableOption(option: BaseOptions) {
 }
 
 export function AttachmentOption(option: BaseOptions) {
-    return function<T extends Function>(constructor: T) {
+    return function <T extends Function>(constructor: T) {
         const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, constructor) || [];
 
         options.push(
@@ -311,7 +311,7 @@ export function AttachmentOption(option: BaseOptions) {
 // Injection
 
 export function StringOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -322,7 +322,7 @@ export function StringOptionInjection(name: string) {
 }
 
 export function IntegerOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -333,7 +333,7 @@ export function IntegerOptionInjection(name: string) {
 }
 
 export function NumberOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -344,7 +344,7 @@ export function NumberOptionInjection(name: string) {
 }
 
 export function BooleanOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -355,7 +355,7 @@ export function BooleanOptionInjection(name: string) {
 }
 
 export function UserOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -366,7 +366,7 @@ export function UserOptionInjection(name: string) {
 }
 
 export function ChannelOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -377,7 +377,7 @@ export function ChannelOptionInjection(name: string) {
 }
 
 export function RoleOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -388,7 +388,7 @@ export function RoleOptionInjection(name: string) {
 }
 
 export function MentionableOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
@@ -399,7 +399,7 @@ export function MentionableOptionInjection(name: string) {
 }
 
 export function AttachmentOptionInjection(name: string) {
-    return function(target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const constructor = target;
         const optionsIndexArray: OptionsIndex[] = Reflect.getMetadata(OPTIONS_PARAMETER_INDEX_KEY, constructor) || [];
 
