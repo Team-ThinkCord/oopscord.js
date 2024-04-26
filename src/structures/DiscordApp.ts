@@ -1,8 +1,10 @@
-import { ApplicationCommandOption, ChatInputCommandInteraction, Client, ClientEvents, Interaction, REST, RESTPostAPIApplicationCommandsJSONBody, Routes, SlashCommandBuilder } from "discord.js";
-import {  DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
+import { ApplicationCommandOption, ChatInputCommandInteraction, Client, ClientEvents, Interaction, REST, SlashCommandBuilder } from "discord.js";
+import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
+import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
 import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY } from "./decorators/Constants";
 import { InteractionType } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
+import { Plugin } from ".";
 
 export interface Logger {
     info(message: string): void;

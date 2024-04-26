@@ -1,4 +1,4 @@
-import { ButtonStyle } from "discord.js";
+import { ButtonStyle } from "discord-api-types/v10";
 import { InteractionButtonOptions, LinkButtonOptions } from "../structures/decorators/MessageComponentDecorator";
 
 export class InteractionUtil {

@@ -1,4 +1,5 @@
-import { ButtonStyle, EmojiResolvable, UserSelectMenuBuilder } from "discord.js";
+import { EmojiResolvable, UserSelectMenuBuilder } from "discord.js";
+import { ButtonStyle } from "discord-api-types/v10";
 import { BUTTON_OPTIONS_KEY } from ".";
 
 export type InteractionButtonOptions = { customId: string, label?: string, emoji?: EmojiResolvable, style: Exclude<ButtonStyle, ButtonStyle.Link> }
