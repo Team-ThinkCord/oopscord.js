@@ -47,7 +47,7 @@ export function DiscordModule(option1: ModuleOptions) {
 
 export function EventHandler(eventName: keyof ClientEvents): MethodDecorator {
     return function<T>(target: Object, propertyKey: string | symbol, propertyDescriptor: TypedPropertyDescriptor<T>) {
-        const events: DiscordModuleEvents[] = Reflect.getMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, target) ?? [];
+        const events: DiscordModuleEvents[] = Reflect.getMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, target.constructor) ?? [];
 
         events.push({ eventName, methodName: propertyKey as string });
 
