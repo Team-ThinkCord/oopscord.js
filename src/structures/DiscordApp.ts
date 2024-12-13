@@ -255,6 +255,10 @@ export class DiscordApp {
             this.#chatInputCommandHandler(itr);
         } else if (itr.isButton()) {
             this.#buttonHandler(itr);
+        } else if (itr.isAnySelectMenu()) {
+            this.#selectMenuHandler(itr);
+        } else if (itr.isModalSubmit()) {
+            this.#modalHandler(itr);
         }
     }
 
