@@ -2,9 +2,9 @@ import { ButtonBuilder, ButtonStyle } from "discord.js";
 import { BUTTON_OPTIONS_KEY, ButtonOptions } from "..";
 
 export class BaseButton {
-    #button: ButtonBuilder | null = null;
+    static #button: ButtonBuilder | null = null;
 
-    public getButton() {
+    static getButton() {
         if (this.#button) return this.#button;
 
         const button = new ButtonBuilder();

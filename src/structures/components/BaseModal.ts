@@ -2,9 +2,9 @@ import { ActionRowBuilder, ModalActionRowComponentBuilder, ModalBuilder } from "
 import { MODAL_COMPONENTS_KEY, MODAL_OPTIONS_KEY, ModalOptions } from "..";
 
 export class BaseModal {
-    #modal: ModalBuilder | null = null;
+    static #modal: ModalBuilder | null = null;
 
-    public getModal() {
+    static getModal() {
         if (this.#modal) return this.#modal;
 
         const modal = new ModalBuilder();
@@ -24,7 +24,7 @@ export class BaseModal {
         return modal;
     }
 
-    public withDefaultValues(...values: { customId: string, value: string }[]) {
+    static withDefaultValues(...values: { customId: string, value: string }[]) {
         const modal = ModalBuilder.from(this.getModal().toJSON());
 
         modal.setComponents(modal.components.map(c =>

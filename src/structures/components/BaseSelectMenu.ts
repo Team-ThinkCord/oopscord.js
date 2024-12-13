@@ -2,9 +2,9 @@ import { APIStringSelectComponent, ChannelSelectMenuBuilder, ComponentType, Ment
 import { BaseSelectMenuOptions, ChannelSelectMenuOptions, MentionableSelectMenuOptions, RoleSelectMenuOptions, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY, StringSelectMenuOptions, UserSelectMenuOptions } from "..";
 
 export class BaseSelectMenu {
-    #selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder | null = null;
+    static #selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder | null = null;
 
-    public getSelectMenu() {
+    static getSelectMenu() {
         if (this.#selectMenu) return this.#selectMenu;
 
         let selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder;
@@ -54,7 +54,7 @@ export class BaseSelectMenu {
         return selectMenu;
     }
 
-    public withValues(...values: { label: string, value: string, description?: string, emoji?: string }[]) {
+    static withValues(...values: { label: string, value: string, description?: string, emoji?: string }[]) {
         if (this.getSelectMenu().data.type != ComponentType.StringSelect) throw new TypeError("withValues is only available for StringSelectMenu.");
 
         const selectMenu = StringSelectMenuBuilder.from(this.getSelectMenu().toJSON() as APIStringSelectComponent);
