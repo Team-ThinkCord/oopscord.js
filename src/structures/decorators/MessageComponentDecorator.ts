@@ -101,7 +101,7 @@ export function TextInput(options: TextInputOptions) {
 }
 
 export function TextInputFieldInjection(customId: string) {
-    return function(target: any, _propertyKey: string, parameterIndex: number) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
         const fields = Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, target.constructor) as FieldIndex[] ?? [];
 
         fields.push({ index: parameterIndex, customId });
