@@ -17,7 +17,7 @@ export class BaseModal {
             .setTitle(options.title)
             .setCustomId(options.customId);
 
-        modal.setComponents(new ActionRowBuilder(...components.map(c => c.toJSON())));
+        modal.setComponents(components.map(c => new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(c)));
 
         this.modal = modal;
 

@@ -104,10 +104,10 @@ export function TextInput(options: TextInputOptions) {
 
 export function TextInputFieldInjection(customId: string) {
     return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const fields = Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, target.constructor) as FieldIndex[] ?? [];
+        const fields = Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, target) as FieldIndex[] ?? [];
 
         fields.push({ index: parameterIndex, customId });
 
-        Reflect.defineMetadata(MODAL_FIELD_INDEX_KEY, fields, target.constructor);
+        Reflect.defineMetadata(MODAL_FIELD_INDEX_KEY, fields, target);
     }
 }
