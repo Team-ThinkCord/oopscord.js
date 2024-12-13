@@ -2,10 +2,10 @@ import { ActionRowBuilder, ModalActionRowComponentBuilder, ModalBuilder } from "
 import { MODAL_COMPONENTS_KEY, MODAL_OPTIONS_KEY, ModalOptions } from "..";
 
 export class BaseModal {
-    static #modal: ModalBuilder | null = null;
+    static modal: ModalBuilder | null = null;
 
     static getModal() {
-        if (this.#modal) return this.#modal;
+        if (this.modal) return this.modal;
 
         const modal = new ModalBuilder();
         const options = Reflect.getMetadata(MODAL_OPTIONS_KEY, this.constructor) as ModalOptions;
@@ -19,7 +19,7 @@ export class BaseModal {
 
         modal.setComponents(new ActionRowBuilder(...components.map(c => c.toJSON())));
 
-        this.#modal = modal;
+        this.modal = modal;
 
         return modal;
     }

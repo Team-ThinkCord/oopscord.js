@@ -2,10 +2,10 @@ import { APIStringSelectComponent, ChannelSelectMenuBuilder, ComponentType, Ment
 import { BaseSelectMenuOptions, ChannelSelectMenuOptions, MentionableSelectMenuOptions, RoleSelectMenuOptions, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY, StringSelectMenuOptions, UserSelectMenuOptions } from "..";
 
 export class BaseSelectMenu {
-    static #selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder | null = null;
+    static selelctMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder | null = null;
 
     static getSelectMenu() {
-        if (this.#selectMenu) return this.#selectMenu;
+        if (this.selelctMenu) return this.selelctMenu;
 
         let selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder;
 
@@ -49,7 +49,7 @@ export class BaseSelectMenu {
         if (typeof options.minValues == 'number') selectMenu.setMinValues(options.minValues);
         if (typeof options.maxValues == 'number') selectMenu.setMaxValues(options.maxValues);
 
-        this.#selectMenu = selectMenu;
+        this.selelctMenu = selectMenu;
 
         return selectMenu;
     }
