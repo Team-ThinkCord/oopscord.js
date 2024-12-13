@@ -8,8 +8,8 @@ export class BaseModal {
         if (this.modal) return this.modal;
 
         const modal = new ModalBuilder();
-        const options = Reflect.getMetadata(MODAL_OPTIONS_KEY, this.constructor) as ModalOptions;
-        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, this.constructor) as ModalActionRowComponentBuilder[] ?? [];
+        const options = Reflect.getMetadata(MODAL_OPTIONS_KEY, this) as ModalOptions;
+        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, this) as ModalActionRowComponentBuilder[] ?? [];
 
         if (!options) throw new TypeError("Failed to get the modal.");
 

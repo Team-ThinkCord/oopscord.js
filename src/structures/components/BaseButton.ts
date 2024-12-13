@@ -8,7 +8,7 @@ export class BaseButton {
         if (this.button) return this.button;
 
         const button = new ButtonBuilder();
-        const options = Reflect.getMetadata(BUTTON_OPTIONS_KEY, this.constructor) as ButtonOptions;
+        const options = Reflect.getMetadata(BUTTON_OPTIONS_KEY, this) as ButtonOptions;
 
         if (!options) throw new TypeError("Failed to get the button.");
 

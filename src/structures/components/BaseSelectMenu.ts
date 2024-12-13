@@ -9,8 +9,8 @@ export class BaseSelectMenu {
 
         let selectMenu: StringSelectMenuBuilder | UserSelectMenuBuilder | RoleSelectMenuBuilder | ChannelSelectMenuBuilder | MentionableSelectMenuBuilder;
 
-        const type = Reflect.getMetadata(SELECT_MENU_TYPE_KEY, this.constructor) as string;
-        const options = Reflect.getMetadata(SELECT_MENU_OPTIONS_KEY, this.constructor) as BaseSelectMenuOptions;
+        const type = Reflect.getMetadata(SELECT_MENU_TYPE_KEY, this) as string;
+        const options = Reflect.getMetadata(SELECT_MENU_OPTIONS_KEY, this) as BaseSelectMenuOptions;
 
         if (!options) throw new TypeError("Failed to get the select menu.");
 
