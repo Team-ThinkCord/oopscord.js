@@ -18,9 +18,16 @@ export const DICSORD_MODULE_OPTIONS_KEY = Symbol("options");
 export const DISCORD_MODULE_INTERNAL_EVENTS_KEY = Symbol("internal_events");
 export const DISCORD_MODULE_EXTERNAL_EVENTS_KEY = Symbol("external_events");
 
+export const MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY = Symbol("components");
+
 export const BUTTON_OPTIONS_KEY = Symbol("options");
 
+export const SELECT_MENU_TYPE_KEY = Symbol("type");
 export const SELECT_MENU_OPTIONS_KEY = Symbol("options");
+
+export const MODAL_OPTIONS_KEY = Symbol("options");
+export const MODAL_COMPONENTS_KEY = Symbol("components");
+export const MODAL_FIELD_INDEX_KEY = Symbol("field_index");
 
 export enum ModuleType {
     COMMAND,

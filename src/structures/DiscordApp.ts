@@ -1,10 +1,10 @@
-import { ApplicationCommandOption, ChatInputCommandInteraction, Client, ClientEvents, Interaction, REST, SlashCommandBuilder } from "discord.js";
+import { AnySelectMenuInteraction, ApplicationCommandOption, ButtonInteraction, ChatInputCommandInteraction, Client, ClientEvents, Interaction, ModalSubmitInteraction, REST, SlashCommandBuilder } from "discord.js";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY } from "./decorators/Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_FIELD_INDEX_KEY } from "./decorators/Constants";
 import { InteractionType } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
-import { Plugin } from ".";
+import { FieldIndex, Plugin } from ".";
 
 export interface Logger {
     info(message: string): void;
@@ -49,11 +49,17 @@ export class DiscordApp {
     #appOptions!: DiscordAppOptions;
     #moduleOptions!: ModuleOptions;
     #commands!: (new (...args: any[]) => any)[];
+    #buttons!: (new (...args: any[]) => any)[];
+    #selectMenus!: (new (...args: any[]) => any)[];
+    #modals!: (new (...args: any[]) => any)[];
+    #loadStartTimestamp!: number;
 
     constructor() {
         if (!a1) throw new ReferenceError("Please use DiscordApp.create()");
 
         a1 = false;
+
+        this.#loadStartTimestamp = Date.now();
 
         this.#rest = new REST({ version: "10" });
     }
@@ -80,8 +86,12 @@ export class DiscordApp {
                 
                 Reflect.set(data, "options", options);
 
+                this.#module.logger.info(`Mapped global command ${name}.`);
+
                 return data.toJSON();
             });
+
+            this.#module.logger.info(`Mapped ${apiGlobalCommands.length} global command(s).`);
 
             // Prepare private commands
             const apiPrivateCommands: { [guildId: string]: RESTPostAPIApplicationCommandsJSONBody[] } = {}
@@ -102,7 +112,13 @@ export class DiscordApp {
                 if (!Array.isArray(apiPrivateCommands[guildId])) apiPrivateCommands[guildId] = [];
 
                 apiPrivateCommands[guildId].push(data.toJSON());
+
+                this.#module.logger.info(`Mapped private command ${name} in ${guildId}.`);
             });
+
+            const wholePrivateCommands = Object.values(apiPrivateCommands).flat();
+
+            this.#module.logger.info(`Mapped ${Object.keys(apiPrivateCommands).length} guild(s) with ${wholePrivateCommands.length} private command(s).`);
 
             if (this.#moduleOptions.test!.enable) {
                 await this.#rest.put(
@@ -114,7 +130,7 @@ export class DiscordApp {
                     Routes.applicationCommands(this.#client.user!.id),
                     { body: apiGlobalCommands }
                 );
-                this.#appOptions.logger?.info(`Successfully registered global commands.`);
+                this.#module.logger.info(`Successfully registered global commands.`);
 
                 for (const guildId in apiPrivateCommands) {
                     await this.#rest.put(
@@ -122,13 +138,15 @@ export class DiscordApp {
                         { body: apiPrivateCommands[guildId] }
                     );
 
-                    this.#appOptions.logger?.info(`Successfully registered private commands in ${guildId}.`);
+                    this.#module.logger.info(`Successfully registered private commands in ${guildId}.`);
                 }
             }
         } catch (err) {
-            this.#appOptions.logger?.warn("Failed to deploy commands.");
-            this.#appOptions.logger?.warn((err as Error).stack!);
+            this.#module.logger.warn("Failed to deploy commands.");
+            this.#module.logger.warn((err as Error).stack!);
         }
+
+        this.#module.logger.info("Application took " + (Date.now() - this.#loadStartTimestamp) + "ms to load.");
     }
 
     #chatInputCommandHandler(itr: ChatInputCommandInteraction) {
@@ -189,9 +207,54 @@ export class DiscordApp {
         }
     }
 
+    #buttonHandler(itr: ButtonInteraction) {
+        const button = this.#buttons.find(b => Reflect.getMetadata(BUTTON_OPTIONS_KEY, b).customId == itr.customId);
+
+        if (!button) return;
+
+        let runMethod: string = Reflect.getMetadata(INTERACTION_RUN_METHOD_KEY, button);
+
+        let cmd = new button(itr);
+
+        cmd[runMethod]();
+    }
+
+    #selectMenuHandler(itr: AnySelectMenuInteraction) {
+        const selectMenu = this.#selectMenus.find(b => Reflect.getMetadata(SELECT_MENU_OPTIONS_KEY, b).customId == itr.customId);
+
+        if (!selectMenu) return;
+
+        let runMethod: string = Reflect.getMetadata(INTERACTION_RUN_METHOD_KEY, selectMenu);
+
+        let cmd = new selectMenu(itr);
+
+        cmd[runMethod]();
+    }
+
+    #modalHandler(itr: ModalSubmitInteraction) {
+        const modal = this.#modals.find(b => Reflect.getMetadata(MODAL_OPTIONS_KEY, b).customId == itr.customId);
+
+        if (!modal) return;
+
+        let runMethod: string = Reflect.getMetadata(INTERACTION_RUN_METHOD_KEY, modal);
+        let preArgs: (number | FieldIndex)[] = [ Reflect.getMetadata(INTERACTION_PARAMETER_INDEX_KEY, modal), ...(Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, modal) || []) ];
+        let args: (ModalSubmitInteraction | any)[] = Array(preArgs.length).fill(null);
+
+        preArgs.forEach(arg => {
+            if (typeof arg == "number") args[arg] = itr;
+            else args[arg.index] = itr.fields.getTextInputValue(arg.customId);
+        });
+
+        let cmd = new modal(...args);
+
+        cmd[runMethod]();
+    }
+
     #autoHandler(itr: Interaction) {
         if (itr.isChatInputCommand()) {
             this.#chatInputCommandHandler(itr);
+        } else if (itr.isButton()) {
+            this.#buttonHandler(itr);
         }
     }
 
@@ -219,6 +282,22 @@ export class DiscordApp {
                 case ModuleType.COMMAND:
                     if (!this.#commands) this.#commands = [];
                     this.#commands.push(...Reflect.getMetadata(COMMAND_MODULE_COMMANDS_KEY, module));
+
+                    break;
+                case ModuleType.MESSAGE_COMPONENT:
+                    const components = Reflect.getMetadata(MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, module) as (new (...args: any[]) => any)[];
+                    const buttons = components.filter(c => Reflect.getMetadata(INTERACTION_TYPE_KEY, c) == InteractionType.BUTTON);
+                    const selectMenus = components.filter(c => Reflect.getMetadata(INTERACTION_TYPE_KEY, c) == InteractionType.SELECT_MENU);
+                    const modals = components.filter(c => Reflect.getMetadata(INTERACTION_TYPE_KEY, c) == InteractionType.MODAL_SUBMIT);
+
+                    if (!this.#buttons) this.#buttons = [];
+                    this.#buttons.push(...buttons);
+
+                    if (!this.#selectMenus) this.#selectMenus = [];
+                    this.#selectMenus.push(...selectMenus);
+
+                    if (!this.#modals) this.#modals = [];
+                    this.#modals.push(...modals);
 
                     break;
             }

@@ -37,11 +37,9 @@ export function Subcommand(option: CommandOptions): ClassDecorator {
     }
 }
 
-export function Private(isPrivate: boolean = true, guild?: string) {
-    if (isPrivate && !guild) throw new TypeError("You must provide guild id if isPrivate is true.");
-
+export function Private(guild: string) {
     return function <TFunction extends Function>(constructor: TFunction) {
-        Reflect.defineMetadata(COMMAND_PRIVATE_KEY, isPrivate, constructor);
+        Reflect.defineMetadata(COMMAND_PRIVATE_KEY, true, constructor);
         Reflect.defineMetadata(COMMAND_PRIVATE_GUILD_KEY, guild, constructor);
     }
 }
