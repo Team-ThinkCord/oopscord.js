@@ -96,6 +96,8 @@ export function TextInput(options: TextInputOptions) {
         if (typeof options.minLength == 'number') component.setMinLength(options.minLength);
         if (typeof options.maxLength == 'number') component.setMaxLength(options.maxLength);
 
+        components.push(component);
+
         Reflect.defineMetadata(MODAL_COMPONENTS_KEY, components, constructor);
     }
 }
