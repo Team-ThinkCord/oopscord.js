@@ -2,7 +2,7 @@ import { AnySelectMenuInteraction, ApplicationCommandOption, ButtonInteraction, 
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
 import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_FIELD_INDEX_KEY } from "./decorators/Constants";
-import { InteractionType } from "./Constants";
+import { InteractionType, SlashCommandOptions } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
 import { FieldIndex, Plugin } from ".";
 
@@ -78,13 +78,14 @@ export class DiscordApp {
             const apiGlobalCommands: RESTPostAPIApplicationCommandsJSONBody[] = globalCommands.map(c => {
                 const name: string = Reflect.getMetadata(COMMAND_NAME_KEY, c);
                 const description: string = Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c);
-                const options: ApplicationCommandOption[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
+                const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
+                const requiredOptions: SlashCommandOptions[] = options.filter(o => o.required);
 
                 const data = new SlashCommandBuilder()
                     .setName(name)
                     .setDescription(description);
                 
-                Reflect.set(data, "options", options);
+                Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
 
                 this.#module.logger.info(`Mapped global command ${name}.`);
 
@@ -101,13 +102,14 @@ export class DiscordApp {
 
                 const name: string = Reflect.getMetadata(COMMAND_NAME_KEY, c);
                 const description: string = Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c);
-                const options: ApplicationCommandOption[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
+                const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
+                const requiredOptions: SlashCommandOptions[] = options.filter(o => o.required);
 
                 const data = new SlashCommandBuilder()
                     .setName(name)
                     .setDescription(description);
                 
-                Reflect.set(data, "options", options);
+                Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
 
                 if (!Array.isArray(apiPrivateCommands[guildId])) apiPrivateCommands[guildId] = [];
 
