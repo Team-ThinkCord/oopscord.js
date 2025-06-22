@@ -322,8 +322,9 @@ export class DiscordApp {
 
         const data = new SlashCommandBuilder()
             .setName(name)
-            .setDescription(description)
-            .setIntegrationTypes(integrationTypes);
+            .setDescription(description);
+        
+        if (integrationTypes.length > 0) data.setIntegrationTypes(integrationTypes);
         
         Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
 
@@ -335,8 +336,9 @@ export class DiscordApp {
     #mapContextMenuCommand(name: string, type: ContextMenuCommandType, integrationTypes: ApplicationIntegrationType[] = []) {
         const data = new ContextMenuCommandBuilder()
             .setName(name)
-            .setType(type)
-            .setIntegrationTypes(integrationTypes);
+            .setType(type);
+        
+        if (integrationTypes.length > 0) data.setIntegrationTypes(integrationTypes);
 
         this.#module.logger.info(`├─ Mapped context command ${name}.`);
         
