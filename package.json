@@ -26,11 +26,12 @@
   "homepage": "https://github.com/Team-ThinkCord/tDis#readme",
   "private": false,
   "dependencies": {
-    "discord.js": "^14.14.1",
     "reflect-metadata": "^0.1.14"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
+    "discord.js": "^14.20.0",
+    "typescript": "^5.8.3",
     "yarn": "^1.22.21"
   }
 }

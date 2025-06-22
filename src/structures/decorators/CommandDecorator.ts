@@ -1,10 +1,11 @@
-import { ApplicationCommandOptionAllowedChannelTypes, CommandInteractionOptionResolver, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder, SlashCommandUserOption, ToAPIApplicationCommandOptions } from "discord.js";
-import { ChannelType, APIApplicationCommandOptionChoice } from "discord-api-types/v10";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_GUILD_KEY, COMMAND_PRIVATE_KEY, COMMAND_OPTIONS_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_TYPE_KEY, COMMAND_SUBCOMMANDS_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY } from "./Constants";
+import { ApplicationCommandOptionAllowedChannelTypes, CommandInteractionOptionResolver, ContextMenuCommandType, SlashCommandAttachmentOption, SlashCommandBooleanOption, SlashCommandChannelOption, SlashCommandIntegerOption, SlashCommandMentionableOption, SlashCommandNumberOption, SlashCommandRoleOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, SlashCommandSubcommandGroupBuilder, SlashCommandUserOption, ToAPIApplicationCommandOptions } from "discord.js";
+import { ChannelType, APIApplicationCommandOptionChoice, ApplicationIntegrationType } from "discord-api-types/v10";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_GUILD_KEY, COMMAND_PRIVATE_KEY, COMMAND_OPTIONS_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_TYPE_KEY, COMMAND_SUBCOMMANDS_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, INTERACTION_INTEGRATION_TYPES_KEY, CONTEXT_MENU_TYPE_KEY } from "./Constants";
 import { InteractionType, SlashCommandOptions } from "../Constants";
 
 export type CommandModuleOptions = { commands: (new (...args: any[]) => any)[] }
 export type CommandOptions = { name: string, description: string }
+export type ContextMenuOptions = { name: string, type: ContextMenuCommandType }
 export type BaseOptions = { name: string, description: string, required?: boolean }
 export type OptionWithChoices<ValueType extends (string | number)> = BaseOptions & { choices: APIApplicationCommandOptionChoice<ValueType>[] }
 export type StringOptions = BaseOptions & { minLength?: number, maxLength?: number, autocomplete?: boolean }
@@ -17,6 +18,12 @@ export function CommandModule(options: CommandModuleOptions): ClassDecorator {
     return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(MODULE_TYPE_KEY, ModuleType.COMMAND, constructor);
         Reflect.defineMetadata(COMMAND_MODULE_COMMANDS_KEY, options.commands, constructor);
+    }
+}
+
+export function IntegrationTypes(...types: ApplicationIntegrationType[][] | ApplicationIntegrationType[]): ClassDecorator {
+    return function <TFunction extends Function>(constructor: TFunction) {
+        Reflect.defineMetadata(INTERACTION_INTEGRATION_TYPES_KEY, types.flat(), constructor);
     }
 }
 
@@ -405,5 +412,13 @@ export function AttachmentOptionInjection(name: string) {
         optionsIndexArray.push({ name, getMethod: "getAttachment", index: parameterIndex });
 
         Reflect.defineMetadata(OPTIONS_PARAMETER_INDEX_KEY, optionsIndexArray, constructor);
+    }
+}
+
+export function ContextMenu(option: ContextMenuOptions): ClassDecorator {
+    return function <TFunction extends Function>(constructor: TFunction) {
+        Reflect.defineMetadata(INTERACTION_TYPE_KEY, InteractionType.CONTEXT_MENU_COMMAND, constructor);
+        Reflect.defineMetadata(COMMAND_NAME_KEY, option.name, constructor);
+        Reflect.defineMetadata(CONTEXT_MENU_TYPE_KEY, option.type, constructor);
     }
 }

@@ -1,7 +1,7 @@
-import { AnySelectMenuInteraction, ApplicationCommandOption, ButtonInteraction, ChatInputCommandInteraction, Client, ClientEvents, Interaction, ModalSubmitInteraction, REST, SlashCommandBuilder } from "discord.js";
-import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
+import { AnySelectMenuInteraction, ApplicationCommandOption, ButtonInteraction, ChatInputCommandInteraction, Client, ClientEvents, ContextMenuCommandBuilder, ContextMenuCommandType, Interaction, ModalSubmitInteraction, REST, SlashCommandBuilder } from "discord.js";
+import { ApplicationIntegrationType, RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_FIELD_INDEX_KEY } from "./decorators/Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_FIELD_INDEX_KEY, CONTEXT_MENU_TYPE_KEY, INTERACTION_INTEGRATION_TYPES_KEY } from "./decorators/Constants";
 import { InteractionType, SlashCommandOptions } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
 import { FieldIndex, Plugin } from ".";
@@ -70,29 +70,26 @@ export class DiscordApp {
         await this.#client.login(this.#moduleOptions.token);
 
         try {
-            const commands = this.#commands.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND);
+            const commands = this.#commands.filter(i => Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CHAT_INPUT_COMMAND || Reflect.getMetadata(INTERACTION_TYPE_KEY, i) == InteractionType.CONTEXT_MENU_COMMAND);
             const privateCommands = commands.filter(c => Reflect.getMetadata(COMMAND_PRIVATE_KEY, c));
             const globalCommands = commands.filter(c => !Reflect.getMetadata(COMMAND_PRIVATE_KEY, c));
 
+            this.#module.logger.info(`Found ${commands.length} command(s) in total, ${globalCommands.length} global command(s) and ${privateCommands.length} private command(s).`);
+
+            this.#module.logger.info("Mapping global commands...");
+
             // Prepare global commands
             const apiGlobalCommands: RESTPostAPIApplicationCommandsJSONBody[] = globalCommands.map(c => {
-                const name: string = Reflect.getMetadata(COMMAND_NAME_KEY, c);
-                const description: string = Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c);
-                const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
-                const requiredOptions: SlashCommandOptions[] = options.filter(o => o.required);
+                const type = Reflect.getMetadata(INTERACTION_TYPE_KEY, c);
+                const integrationTypes = Reflect.getMetadata(INTERACTION_INTEGRATION_TYPES_KEY, c);
 
-                const data = new SlashCommandBuilder()
-                    .setName(name)
-                    .setDescription(description);
-                
-                Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
-
-                this.#module.logger.info(`Mapped global command ${name}.`);
-
-                return data.toJSON();
+                if (type == InteractionType.CHAT_INPUT_COMMAND) return this.#mapSlashCommand(Reflect.getMetadata(COMMAND_NAME_KEY, c), Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c), Reflect.getMetadata(COMMAND_OPTIONS_KEY, c), integrationTypes)
+                else return this.#mapContextMenuCommand(Reflect.getMetadata(COMMAND_NAME_KEY, c), Reflect.getMetadata(CONTEXT_MENU_TYPE_KEY, c), integrationTypes);
             });
 
-            this.#module.logger.info(`Mapped ${apiGlobalCommands.length} global command(s).`);
+            this.#module.logger.info(`└─ Mapped ${apiGlobalCommands.length} global command(s).`);
+
+            this.#module.logger.info("Mapping private commands...");
 
             // Prepare private commands
             const apiPrivateCommands: { [guildId: string]: RESTPostAPIApplicationCommandsJSONBody[] } = {}
@@ -100,49 +97,51 @@ export class DiscordApp {
             privateCommands.forEach(c => {
                 const guildId: string = Reflect.getMetadata(COMMAND_PRIVATE_GUILD_KEY, c);
 
-                const name: string = Reflect.getMetadata(COMMAND_NAME_KEY, c);
-                const description: string = Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c);
-                const options: SlashCommandOptions[] = Reflect.getMetadata(COMMAND_OPTIONS_KEY, c) ?? [];
-                const requiredOptions: SlashCommandOptions[] = options.filter(o => o.required);
+                const type = Reflect.getMetadata(INTERACTION_TYPE_KEY, c);
+                const integrationTypes = Reflect.getMetadata(INTERACTION_INTEGRATION_TYPES_KEY, c);
 
-                const data = new SlashCommandBuilder()
-                    .setName(name)
-                    .setDescription(description);
-                
-                Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
+                let data: RESTPostAPIApplicationCommandsJSONBody;
+
+                if (type == InteractionType.CHAT_INPUT_COMMAND) data = this.#mapSlashCommand(Reflect.getMetadata(COMMAND_NAME_KEY, c), Reflect.getMetadata(COMMAND_DESCRIPTION_KEY, c), Reflect.getMetadata(COMMAND_OPTIONS_KEY, c), integrationTypes)
+                else data = this.#mapContextMenuCommand(Reflect.getMetadata(COMMAND_NAME_KEY, c), Reflect.getMetadata(CONTEXT_MENU_TYPE_KEY, c), integrationTypes);
 
                 if (!Array.isArray(apiPrivateCommands[guildId])) apiPrivateCommands[guildId] = [];
 
-                apiPrivateCommands[guildId].push(data.toJSON());
-
-                this.#module.logger.info(`Mapped private command ${name} in ${guildId}.`);
+                apiPrivateCommands[guildId].push(data);
             });
 
             const wholePrivateCommands = Object.values(apiPrivateCommands).flat();
 
-            this.#module.logger.info(`Mapped ${Object.keys(apiPrivateCommands).length} guild(s) with ${wholePrivateCommands.length} private command(s).`);
+            this.#module.logger.info(`└─ Mapped ${Object.keys(apiPrivateCommands).length} guild(s) with ${wholePrivateCommands.length} private command(s).`);
+
+            this.#module.logger.info("Deploying commands...");
 
             if (this.#moduleOptions.test!.enable) {
                 await this.#rest.put(
                     Routes.applicationGuildCommands(this.#client.user!.id, this.#moduleOptions.test!.guild!),
                     { body: apiGlobalCommands }
                 );
+
+                this.#module.logger.info(`├─ Successfully registered global commands, in test guild ${this.#moduleOptions.test!.guild}.`);
             } else {
                 await this.#rest.put(
                     Routes.applicationCommands(this.#client.user!.id),
                     { body: apiGlobalCommands }
                 );
-                this.#module.logger.info(`Successfully registered global commands.`);
 
-                for (const guildId in apiPrivateCommands) {
-                    await this.#rest.put(
-                        Routes.applicationGuildCommands(this.#client.user!.id, guildId),
-                        { body: apiPrivateCommands[guildId] }
-                    );
-
-                    this.#module.logger.info(`Successfully registered private commands in ${guildId}.`);
-                }
+                this.#module.logger.info(`├─ Successfully registered global commands.`);
             }
+
+            for (const guildId in apiPrivateCommands) {
+                await this.#rest.put(
+                    Routes.applicationGuildCommands(this.#client.user!.id, guildId),
+                    { body: apiPrivateCommands[guildId] }
+                );
+
+                this.#module.logger.info(`├─ Successfully registered private commands in ${guildId}.`);
+            }
+
+            this.#module.logger.info("└─ Successfully deployed all commands.");
         } catch (err) {
             this.#module.logger.warn("Failed to deploy commands.");
             this.#module.logger.warn((err as Error).stack!);
@@ -316,6 +315,32 @@ export class DiscordApp {
 
     #setOptions(options: DiscordAppOptions) {
         this.#appOptions = mergeDefault(defaultDiscordAppOptions, options);
+    }
+
+    #mapSlashCommand(name: string, description: string, options: SlashCommandOptions[] = [], integrationTypes: ApplicationIntegrationType[] = []) {
+        const requiredOptions: SlashCommandOptions[] = options.filter(o => o.required);
+
+        const data = new SlashCommandBuilder()
+            .setName(name)
+            .setDescription(description)
+            .setIntegrationTypes(integrationTypes);
+        
+        Reflect.set(data, "options", [ ...requiredOptions, ...options.filter(o => !o.required) ]);
+
+        this.#module.logger.info(`├─ Mapped slash command ${name}.`);
+
+        return data.toJSON();
+    }
+
+    #mapContextMenuCommand(name: string, type: ContextMenuCommandType, integrationTypes: ApplicationIntegrationType[] = []) {
+        const data = new ContextMenuCommandBuilder()
+            .setName(name)
+            .setType(type)
+            .setIntegrationTypes(integrationTypes);
+
+        this.#module.logger.info(`├─ Mapped context command ${name}.`);
+        
+        return data.toJSON();
     }
 
     static create(discordModule: typeof BaseDiscordModule, options: DiscordAppOptions = {}) {
