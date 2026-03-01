@@ -90,9 +90,9 @@ export function TextInput(options: TextInputOptions) {
             .setLabel(options.label)
             .setStyle(options.style);
 
-        if (options.placeholder) component.setPlaceholder(options.placeholder);
-        if (options.value) component.setValue(options.value);
-        if (options.required) component.setRequired(options.required);
+        if (typeof options.placeholder == 'string') component.setPlaceholder(options.placeholder);
+        if (typeof options.value == 'string') component.setValue(options.value);
+        if (typeof options.required == 'boolean') component.setRequired(options.required);
         if (typeof options.minLength == 'number') component.setMinLength(options.minLength);
         if (typeof options.maxLength == 'number') component.setMaxLength(options.maxLength);
 
