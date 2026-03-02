@@ -1,7 +1,9 @@
-import { ComponentEmojiResolvable, ModalActionRowComponentBuilder, StringSelectMenuBuilder, TextInputBuilder } from "discord.js";
-import { ButtonStyle, TextInputStyle } from "discord-api-types/v10";
-import { BUTTON_OPTIONS_KEY, INTERACTION_TYPE_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, MODAL_COMPONENTS_KEY, MODAL_FIELD_INDEX_KEY, MODAL_OPTIONS_KEY, MODULE_TYPE_KEY, ModuleType, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY } from ".";
+import { ActionRowBuilder, ChannelSelectMenuBuilder, ComponentEmojiResolvable, FileUploadBuilder, LabelBuilder, MentionableSelectMenuBuilder, ModalActionRowComponentBuilder, RoleSelectMenuBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, UserSelectMenuBuilder } from "discord.js";
+import { ButtonStyle, ChannelType, TextInputStyle } from "discord-api-types/v10";
+import { BUTTON_OPTIONS_KEY, INTERACTION_TYPE_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, MODAL_COMPONENTS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, MODAL_OPTIONS_KEY, MODULE_TYPE_KEY, ModuleType, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY } from ".";
 import { InteractionType } from "../Constants";
+
+type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
 export type ButtonOptions = InteractionButtonOptions | LinkButtonOptions | PremiumButtonOptions;
 export type MessageComponentModuleOptions = { components: (new (...args: any[]) => any)[] }
@@ -9,15 +11,37 @@ export type InteractionButtonOptions = { customId: string, disabled?: boolean, l
 export type LinkButtonOptions = { label?: string, disabled?: boolean, emoji?: ComponentEmojiResolvable, style: ButtonStyle.Link, url: string }
 export type PremiumButtonOptions = { style: ButtonStyle.Premium, disabled?: boolean, skuId: string }
 
-export type BaseSelectMenuOptions = { customId: string, placeholder: string, disabled?: boolean, minValues?: number, maxValues?: number }
+export type BaseSelectMenuOptions = { customId: string, placeholder?: string, disabled?: boolean, minValues?: number, maxValues?: number }
 export type StringSelectMenuOptions = BaseSelectMenuOptions & { options: { label: string, value: string, description?: string, emoji?: ComponentEmojiResolvable }[] }
 export type UserSelectMenuOptions = BaseSelectMenuOptions & { defaultUsers?: string[] }
-export type ChannelSelectMenuOptions = BaseSelectMenuOptions & { defaultChannels?: string[] }
+export type ChannelSelectMenuOptions = BaseSelectMenuOptions & { defaultChannels?: string[], channelTypes?: ChannelType[] }
 export type RoleSelectMenuOptions = BaseSelectMenuOptions & { defaultRoles?: string[] }
 export type MentionableSelectMenuOptions = BaseSelectMenuOptions & { defaultUsers?: string[], defaultRoles?: string[] }
 
 export type ModalOptions = { customId: string, title: string }
-export type TextInputOptions = { customId: string, label: string, style: TextInputStyle, placeholder?: string, value?: string, required?: boolean, minLength?: number, maxLength?: number }
+export type ModalTextInput = { type: "text_input", customId: string, style: TextInputStyle, placeholder?: string, value?: string, required?: boolean, minLength?: number, maxLength?: number }
+export type ModalStringSelect = StringSelectMenuOptions & { type: "string_select" }
+export type ModalUserSelect = UserSelectMenuOptions & { type: "user_select" }
+export type ModalChannelSelect = ChannelSelectMenuOptions & { type: "channel_select" }
+export type ModalRoleSelect = RoleSelectMenuOptions & { type: "role_select" }
+export type ModalMentionableSelect = MentionableSelectMenuOptions & { type: "mentionable_select" }
+export type ModalFileUploadOptions = { type: "file_upload", customId: string, minValues?: number, maxValues?: number, required?: boolean }
+export type ModalTextDisplayOptions = { content: string }
+export type ModalLabelOptions = { label: string, description?: string, component: ModalLabelComponent }
+
+export type ModalComponentBuilder = ActionRowBuilder<ModalActionRowComponentBuilder> | LabelBuilder | TextDisplayBuilder;
+
+type ModalComponentBase =
+  | ModalTextInput
+  | ModalFileUploadOptions
+  | ModalStringSelect
+  | ModalUserSelect
+  | ModalChannelSelect
+  | ModalRoleSelect
+  | ModalMentionableSelect;
+
+export type ModalLabelComponent = DistributiveOmit<ModalComponentBase & { required?: boolean, disabled?: never }, "disabled">;
+
 export type FieldIndex = { index: number, customId: string }
 
 export function MessageComponentModule(options: MessageComponentModuleOptions) {
@@ -81,22 +105,124 @@ export function Modal(options: ModalOptions) {
     }
 }
 
-export function TextInput(options: TextInputOptions) {
+export function ModalLabel(options: ModalLabelOptions) {
     return function<T extends Function>(constructor: T) {
-        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalActionRowComponentBuilder[] ?? [];
+        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentBuilder[] ?? [];
 
-        const component = new TextInputBuilder()
-            .setCustomId(options.customId)
-            .setLabel(options.label)
-            .setStyle(options.style);
+        const label = new LabelBuilder();
 
-        if (typeof options.placeholder == 'string') component.setPlaceholder(options.placeholder);
-        if (typeof options.value == 'string') component.setValue(options.value);
-        if (typeof options.required == 'boolean') component.setRequired(options.required);
-        if (typeof options.minLength == 'number') component.setMinLength(options.minLength);
-        if (typeof options.maxLength == 'number') component.setMaxLength(options.maxLength);
+        label.setLabel(options.label);
+        if (options.description) label.setDescription(options.description);
 
-        components.push(component);
+        const component = options.component;
+        
+        switch (component.type) {
+            case "text_input":
+                const textInput = new TextInputBuilder()
+                    .setCustomId(component.customId)
+                    .setStyle(component.style);
+
+                if ("placeholder" in component) textInput.setPlaceholder(component.placeholder!);
+                if ("value" in component) textInput.setValue(component.value!);
+                if ("minLength" in component) textInput.setMinLength(component.minLength!);
+                if ("maxLength" in component) textInput.setMaxLength(component.maxLength!);
+                if ("required" in component) textInput.setRequired(component.required!);
+
+                label.setTextInputComponent(textInput);
+
+                break;
+            case "string_select":
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId(component.customId)
+                    .addOptions(component.options);
+                
+                if (component.placeholder) selectMenu.setPlaceholder(component.placeholder);
+                if (typeof component.minValues == "number") selectMenu.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") selectMenu.setMaxValues(component.maxValues);
+                if ("required" in component) selectMenu.setRequired(component.required!);
+
+                label.setStringSelectMenuComponent(selectMenu);
+
+                break;
+            case "user_select":
+                const userSelectMenu = new UserSelectMenuBuilder()
+                    .setCustomId(component.customId);
+                
+                if (component.placeholder) userSelectMenu.setPlaceholder(component.placeholder);
+                if (typeof component.minValues == "number") userSelectMenu.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") userSelectMenu.setMaxValues(component.maxValues);
+                if (component && component.defaultUsers) userSelectMenu.setDefaultUsers(component.defaultUsers!);
+                if ("required" in component) userSelectMenu.setRequired(component.required!);
+
+                label.setUserSelectMenuComponent(userSelectMenu);
+
+                break;
+            case "channel_select":
+                const channelSelectMenu = new ChannelSelectMenuBuilder()
+                    .setCustomId(component.customId);
+
+                if (component.placeholder) channelSelectMenu.setPlaceholder(component.placeholder); 
+                if (typeof component.minValues == "number") channelSelectMenu.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") channelSelectMenu.setMaxValues(component.maxValues);
+                if (component && component.defaultChannels) channelSelectMenu.setDefaultChannels(component.defaultChannels!);
+                if (component.channelTypes) channelSelectMenu.setChannelTypes(component.channelTypes);
+                if ("required" in component) channelSelectMenu.setRequired(component.required!);
+
+                label.setChannelSelectMenuComponent(channelSelectMenu);
+
+                break;
+            case "role_select":
+                const roleSelectMenu = new RoleSelectMenuBuilder()
+                    .setCustomId(component.customId);
+
+                if (component.placeholder) roleSelectMenu.setPlaceholder(component.placeholder);
+                if (typeof component.minValues == "number") roleSelectMenu.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") roleSelectMenu.setMaxValues(component.maxValues);
+                if (component && component.defaultRoles) roleSelectMenu.setDefaultRoles(component.defaultRoles!);
+                if ("required" in component) roleSelectMenu.setRequired(component.required!);
+
+                label.setRoleSelectMenuComponent(roleSelectMenu);
+
+                break;
+            case "mentionable_select":
+                const mentionableSelectMenu = new MentionableSelectMenuBuilder()
+                    .setCustomId(component.customId);
+
+                if (component.placeholder) mentionableSelectMenu.setPlaceholder(component.placeholder);
+                if (typeof component.minValues == "number") mentionableSelectMenu.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") mentionableSelectMenu.setMaxValues(component.maxValues);
+                if (component && component.defaultUsers) mentionableSelectMenu.addDefaultUsers(component.defaultUsers!);
+                if (component && component.defaultRoles) mentionableSelectMenu.addDefaultRoles(component.defaultRoles!);
+                if ("required" in component) mentionableSelectMenu.setRequired(component.required!);
+
+                label.setMentionableSelectMenuComponent(mentionableSelectMenu);
+
+                break;
+            case "file_upload":
+                const fileUpload = new FileUploadBuilder()
+                    .setCustomId(component.customId)
+                    .setMinValues(component.minValues ?? 1)
+                    .setMaxValues(component.maxValues ?? 1);
+
+                if ("required" in component) fileUpload.setRequired(component.required!);
+
+                label.setFileUploadComponent(fileUpload);
+        }
+
+        components.push(label);
+
+        Reflect.defineMetadata(MODAL_COMPONENTS_KEY, components, constructor);
+    }
+}
+
+export function ModalTextDisplay(options: ModalTextDisplayOptions) {
+    return function<T extends Function>(constructor: T) {
+        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentBuilder[] ?? [];
+
+        const textDisplay = new TextDisplayBuilder()
+            .setContent(options.content);
+
+        components.push(textDisplay);
 
         Reflect.defineMetadata(MODAL_COMPONENTS_KEY, components, constructor);
     }
@@ -104,10 +230,10 @@ export function TextInput(options: TextInputOptions) {
 
 export function TextInputFieldInjection(customId: string) {
     return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const fields = Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, target) as FieldIndex[] ?? [];
+        const fields = Reflect.getMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, target) as FieldIndex[] ?? [];
 
         fields.push({ index: parameterIndex, customId });
 
-        Reflect.defineMetadata(MODAL_FIELD_INDEX_KEY, fields, target);
+        Reflect.defineMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, fields, target);
     }
 }

@@ -1,7 +1,7 @@
 import { AnySelectMenuInteraction, ApplicationCommandOption, ButtonInteraction, ChatInputCommandInteraction, Client, ClientEvents, ContextMenuCommandBuilder, ContextMenuCommandType, Interaction, ModalSubmitInteraction, REST, SlashCommandBuilder } from "discord.js";
 import { ApplicationIntegrationType, RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_FIELD_INDEX_KEY, CONTEXT_MENU_TYPE_KEY, INTERACTION_INTEGRATION_TYPES_KEY } from "./decorators/Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, CONTEXT_MENU_TYPE_KEY, INTERACTION_INTEGRATION_TYPES_KEY } from "./decorators/Constants";
 import { InteractionType, SlashCommandOptions } from "./Constants";
 import { OptionsIndex } from "./decorators/CommandDecorator";
 import { FieldIndex, Plugin } from ".";
@@ -238,7 +238,7 @@ export class DiscordApp {
         if (!modal) return;
 
         let runMethod: string = Reflect.getMetadata(INTERACTION_RUN_METHOD_KEY, modal);
-        let preArgs: (number | FieldIndex)[] = [ Reflect.getMetadata(INTERACTION_PARAMETER_INDEX_KEY, modal), ...(Reflect.getMetadata(MODAL_FIELD_INDEX_KEY, modal) || []) ];
+        let preArgs: (number | FieldIndex)[] = [ Reflect.getMetadata(INTERACTION_PARAMETER_INDEX_KEY, modal), ...(Reflect.getMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, modal) || []) ];
         let args: (ModalSubmitInteraction | any)[] = Array(preArgs.length).fill(null);
 
         preArgs.forEach(arg => {

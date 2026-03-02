@@ -29,6 +29,7 @@ export class BaseSelectMenu {
                 break;
             case "channel":
                 selectMenu = new ChannelSelectMenuBuilder()
+                    .setChannelTypes((options as ChannelSelectMenuOptions).channelTypes ?? [])
                     .setDefaultChannels((options as ChannelSelectMenuOptions).defaultChannels ?? []);
                 break;
             case "mentionable":
@@ -41,9 +42,8 @@ export class BaseSelectMenu {
                 throw new TypeError("Invalid select menu type.");
         }
 
-        selectMenu
-            .setCustomId(options.customId)
-            .setPlaceholder(options.placeholder);
+        selectMenu.setCustomId(options.customId);
+        if ("placeholder" in options) selectMenu.setPlaceholder(options.placeholder!);
 
         if (options.disabled) selectMenu.setDisabled(options.disabled);
         if (typeof options.minValues == 'number') selectMenu.setMinValues(options.minValues);
