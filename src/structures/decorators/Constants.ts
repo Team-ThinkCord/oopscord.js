@@ -30,11 +30,13 @@ export const BUTTON_OPTIONS_KEY = Symbol("options");
 
 export const SELECT_MENU_TYPE_KEY = Symbol("type");
 export const SELECT_MENU_OPTIONS_KEY = Symbol("options");
+export const SELECT_MENU_VALUES_INDEX_KEY = Symbol("values_index");
 
 export const MODAL_OPTIONS_KEY = Symbol("options");
 export const MODAL_COMPONENTS_KEY = Symbol("components");
 export const MODAL_TEXT_INPUT_VALUE_INDEX_KEY = Symbol("field_index");
 export const MODAL_SELECT_MENU_VALUE_INDEX_KEY = Symbol("field_index");
+export const MODAL_FILE_UPLOAD_VALUE_INDEX_KEY = Symbol("field_index");
 
 export enum ModuleType {
     COMMAND,

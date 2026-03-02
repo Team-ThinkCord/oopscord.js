@@ -29,9 +29,10 @@
     "reflect-metadata": "^0.1.14"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
+    "@types/node": "^20.19.35",
     "discord.js": "^14.25.1",
     "typescript": "^5.8.3",
+    "vitest": "^4.0.18",
     "yarn": "^1.22.21"
   }
 }

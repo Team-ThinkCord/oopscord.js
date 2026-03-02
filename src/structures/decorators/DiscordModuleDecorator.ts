@@ -11,6 +11,9 @@ export interface ModuleOptions extends ClientOptions {
     disableCache?: boolean;
 }
 
+/**
+ * Default configuration options for Discord modules.
+ */
 export const defaultModuleOptions: ModuleOptions = {
     token: "",
     imports: [],
@@ -33,6 +36,14 @@ export interface DiscordModuleEvents {
 //     eventEmitter: EventEmitter;
 // }
 
+/**
+ * Decorator that marks a class as a Discord module.
+ * 
+ * @param option1 - The configuration options for the module
+ * @returns A decorator function that applies module metadata to the target class
+ * 
+ * @throws {TypeError} If any of the imported modules are not valid Discord modules
+ */
 export function DiscordModule(option1: ModuleOptions) {
     return function<TFunction extends Function>(constructor: TFunction) {
         const options = mergeDefault(defaultModuleOptions, option1);
@@ -45,6 +56,23 @@ export function DiscordModule(option1: ModuleOptions) {
     }
 }
 
+
+/**
+ * Decorator that registers a method as an event handler for a Discord client event.
+ * 
+ * @param eventName - The name of the Discord client event to listen for
+ * @returns A method decorator that registers the decorated method as an event handler
+ * 
+ * @example
+ * ```typescript
+ * class MyModule {
+ *   ＠EventHandler('messageCreate')
+ *   onMessageCreate(message: Message) {
+ *     // Handle message creation
+ *   }
+ * }
+ * ```
+ */
 export function EventHandler(eventName: keyof ClientEvents): MethodDecorator {
     return function<T>(target: Object, propertyKey: string | symbol, propertyDescriptor: TypedPropertyDescriptor<T>) {
         const events: DiscordModuleEvents[] = Reflect.getMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, target.constructor) ?? [];

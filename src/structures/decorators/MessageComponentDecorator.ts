@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ChannelSelectMenuBuilder, ComponentEmojiResolvable, FileUploadBuilder, LabelBuilder, MentionableSelectMenuBuilder, ModalActionRowComponentBuilder, RoleSelectMenuBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, UserSelectMenuBuilder } from "discord.js";
+import { ChannelSelectMenuBuilder, ComponentEmojiResolvable, FileUploadBuilder, LabelBuilder, MentionableSelectMenuBuilder, RoleSelectMenuBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, UserSelectMenuBuilder } from "discord.js";
 import { ButtonStyle, ChannelType, TextInputStyle } from "discord-api-types/v10";
-import { BUTTON_OPTIONS_KEY, INTERACTION_TYPE_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, MODAL_COMPONENTS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, MODAL_OPTIONS_KEY, MODULE_TYPE_KEY, ModuleType, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY } from ".";
+import { BUTTON_OPTIONS_KEY, INTERACTION_TYPE_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, MODAL_COMPONENTS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, MODAL_OPTIONS_KEY, MODULE_TYPE_KEY, ModuleType, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY, MODAL_SELECT_MENU_VALUE_INDEX_KEY, MODAL_FILE_UPLOAD_VALUE_INDEX_KEY } from ".";
 import { InteractionType } from "../Constants";
 
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
@@ -18,6 +18,9 @@ export type ChannelSelectMenuOptions = BaseSelectMenuOptions & { defaultChannels
 export type RoleSelectMenuOptions = BaseSelectMenuOptions & { defaultRoles?: string[] }
 export type MentionableSelectMenuOptions = BaseSelectMenuOptions & { defaultUsers?: string[], defaultRoles?: string[] }
 
+export type ModalLabelComponentData = { customId: string, component: LabelBuilder, outerType: "label", innerType: "string_select" | "user_select" | "channel_select" | "role_select" | "mentionable_select" | "text_input" | "file_upload" }
+export type ModalTextDisplayComponentData = { customId: string, component: TextDisplayBuilder, outerType: "text_display" }
+export type ModalComponentData = ModalLabelComponentData | ModalTextDisplayComponentData;
 export type ModalOptions = { customId: string, title: string }
 export type ModalTextInput = { type: "text_input", customId: string, style: TextInputStyle, placeholder?: string, value?: string, required?: boolean, minLength?: number, maxLength?: number }
 export type ModalStringSelect = StringSelectMenuOptions & { type: "string_select" }
@@ -26,10 +29,10 @@ export type ModalChannelSelect = ChannelSelectMenuOptions & { type: "channel_sel
 export type ModalRoleSelect = RoleSelectMenuOptions & { type: "role_select" }
 export type ModalMentionableSelect = MentionableSelectMenuOptions & { type: "mentionable_select" }
 export type ModalFileUploadOptions = { type: "file_upload", customId: string, minValues?: number, maxValues?: number, required?: boolean }
-export type ModalTextDisplayOptions = { content: string }
-export type ModalLabelOptions = { label: string, description?: string, component: ModalLabelComponent }
+export type ModalTextDisplayOptions = { customId: string, content: string }
+export type ModalLabelOptions = { customId: string, label: string, description?: string, component: ModalLabelComponent }
 
-export type ModalComponentBuilder = ActionRowBuilder<ModalActionRowComponentBuilder> | LabelBuilder | TextDisplayBuilder;
+export type ModalComponentBuilder = LabelBuilder | TextDisplayBuilder;
 
 type ModalComponentBase =
   | ModalTextInput
@@ -43,6 +46,11 @@ type ModalComponentBase =
 export type ModalLabelComponent = DistributiveOmit<ModalComponentBase & { required?: boolean, disabled?: never }, "disabled">;
 
 export type FieldIndex = { index: number, customId: string }
+export type TextInputFieldIndex = FieldIndex & { type: "text_input" }
+export type SelectMenuFieldIndex = FieldIndex & { type: "select_menu" }
+export type FileUploadFieldIndex = FieldIndex & { type: "file_upload" }
+
+export type ModalFieldIndex = TextInputFieldIndex | SelectMenuFieldIndex | FileUploadFieldIndex;
 
 export function MessageComponentModule(options: MessageComponentModuleOptions) {
     return function<T extends Function>(constructor: T) {
@@ -107,7 +115,7 @@ export function Modal(options: ModalOptions) {
 
 export function ModalLabel(options: ModalLabelOptions) {
     return function<T extends Function>(constructor: T) {
-        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentBuilder[] ?? [];
+        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentData[] ?? [];
 
         const label = new LabelBuilder();
 
@@ -209,7 +217,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setFileUploadComponent(fileUpload);
         }
 
-        components.push(label);
+        components.push({ customId: component.customId, component: label, outerType: "label", innerType: component.type });
 
         Reflect.defineMetadata(MODAL_COMPONENTS_KEY, components, constructor);
     }
@@ -217,12 +225,12 @@ export function ModalLabel(options: ModalLabelOptions) {
 
 export function ModalTextDisplay(options: ModalTextDisplayOptions) {
     return function<T extends Function>(constructor: T) {
-        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentBuilder[] ?? [];
+        const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentData[] ?? [];
 
         const textDisplay = new TextDisplayBuilder()
             .setContent(options.content);
 
-        components.push(textDisplay);
+        components.push({ customId: options.customId, component: textDisplay, outerType: "text_display" });
 
         Reflect.defineMetadata(MODAL_COMPONENTS_KEY, components, constructor);
     }
@@ -230,10 +238,30 @@ export function ModalTextDisplay(options: ModalTextDisplayOptions) {
 
 export function TextInputFieldInjection(customId: string) {
     return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
-        const fields = Reflect.getMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, target) as FieldIndex[] ?? [];
+        const fields = Reflect.getMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
 
-        fields.push({ index: parameterIndex, customId });
+        fields.push({ index: parameterIndex, customId, type: "text_input" });
 
         Reflect.defineMetadata(MODAL_TEXT_INPUT_VALUE_INDEX_KEY, fields, target);
+    }
+}
+
+export function SelectMenuFieldInjection(customId: string) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+        const fields = Reflect.getMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
+
+        fields.push({ index: parameterIndex, customId, type: "select_menu" });
+
+        Reflect.defineMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, fields, target);
+    }
+}
+
+export function FileUploadFieldInjection(customId: string) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+        const fields = Reflect.getMetadata(MODAL_FILE_UPLOAD_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
+
+        fields.push({ index: parameterIndex, customId, type: "file_upload" });
+
+        Reflect.defineMetadata(MODAL_FILE_UPLOAD_VALUE_INDEX_KEY, fields, target);
     }
 }
