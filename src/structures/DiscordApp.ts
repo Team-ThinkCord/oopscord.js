@@ -381,7 +381,10 @@ export class DiscordApp {
                             "user_select": itr.fields.getSelectedUsers,
                             "role_select": itr.fields.getSelectedRoles,
                             "mentionable_select": itr.fields.getSelectedMentionables,
-                            "channel_select": itr.fields.getSelectedChannels
+                            "channel_select": itr.fields.getSelectedChannels,
+                            "radio_group": itr.fields.getRadioGroup,
+                            "checkbox_group": itr.fields.getCheckboxGroup,
+                            "checkbox": itr.fields.getCheckbox
                         };
                         
                         const label = modalComponents.find(c => c.outerType == "label" && c.innerType.endsWith("select") && c.component.data.component?.data?.custom_id == fieldIndex.customId) as ModalLabelComponentData;
