@@ -1,4 +1,4 @@
-import { ChannelSelectMenuBuilder, ComponentEmojiResolvable, FileUploadBuilder, LabelBuilder, MentionableSelectMenuBuilder, RoleSelectMenuBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, UserSelectMenuBuilder } from "discord.js";
+import { ChannelSelectMenuBuilder, CheckboxBuilder, CheckboxGroupBuilder, ComponentEmojiResolvable, FileUploadBuilder, LabelBuilder, MentionableSelectMenuBuilder, RadioGroupBuilder, RoleSelectMenuBuilder, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder, UserSelectMenuBuilder } from "discord.js";
 import { ButtonStyle, ChannelType, TextInputStyle } from "discord-api-types/v10";
 import { BUTTON_OPTIONS_KEY, INTERACTION_TYPE_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, MODAL_COMPONENTS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, MODAL_OPTIONS_KEY, MODULE_TYPE_KEY, ModuleType, SELECT_MENU_OPTIONS_KEY, SELECT_MENU_TYPE_KEY, MODAL_SELECT_MENU_VALUE_INDEX_KEY, MODAL_FILE_UPLOAD_VALUE_INDEX_KEY } from ".";
 import { InteractionType } from "../Constants";
@@ -18,7 +18,8 @@ export type ChannelSelectMenuOptions = BaseSelectMenuOptions & { defaultChannels
 export type RoleSelectMenuOptions = BaseSelectMenuOptions & { defaultRoles?: string[] }
 export type MentionableSelectMenuOptions = BaseSelectMenuOptions & { defaultUsers?: string[], defaultRoles?: string[] }
 
-export type ModalLabelComponentData = { customId: string, component: LabelBuilder, outerType: "label", innerType: "string_select" | "user_select" | "channel_select" | "role_select" | "mentionable_select" | "text_input" | "file_upload" }
+export type ModalLabelComponentData = { customId: string, component: LabelBuilder, outerType: "label", innerType: "string_select" | "user_select" | "channel_select" | "role_select" | "mentionable_select" | "text_input" | "file_upload" | "radio_group" | "checkbox_group" | "checkbox" }
+
 export type ModalTextDisplayComponentData = { customId: string, component: TextDisplayBuilder, outerType: "text_display" }
 export type ModalComponentData = ModalLabelComponentData | ModalTextDisplayComponentData;
 export type ModalOptions = { customId: string, title: string }
@@ -28,20 +29,26 @@ export type ModalUserSelect = UserSelectMenuOptions & { type: "user_select" }
 export type ModalChannelSelect = ChannelSelectMenuOptions & { type: "channel_select" }
 export type ModalRoleSelect = RoleSelectMenuOptions & { type: "role_select" }
 export type ModalMentionableSelect = MentionableSelectMenuOptions & { type: "mentionable_select" }
-export type ModalFileUploadOptions = { type: "file_upload", customId: string, minValues?: number, maxValues?: number, required?: boolean }
-export type ModalTextDisplayOptions = { customId: string, content: string }
+export type ModalFileUpload = { type: "file_upload", customId: string, minValues?: number, maxValues?: number, required?: boolean }
+export type ModalRadioGroup = { type: "radio_group", customId: string, options: { label: string, value: string, description?: string, default?: boolean }[], required?: boolean }
+export type ModalCheckbox = { type: "checkbox", customId: string, default?: boolean }
+export type ModalCheckboxGroup = { type: "checkbox_group", customId: string, minValues?: number, maxValues?: number, options: { label: string, value: string, description?: string, default?: boolean }[], required?: boolean }
+export type ModalTextDisplay = { customId: string, content: string }
 export type ModalLabelOptions = { customId: string, label: string, description?: string, component: ModalLabelComponent }
 
 export type ModalComponentBuilder = LabelBuilder | TextDisplayBuilder;
 
 type ModalComponentBase =
   | ModalTextInput
-  | ModalFileUploadOptions
+  | ModalFileUpload
   | ModalStringSelect
   | ModalUserSelect
   | ModalChannelSelect
   | ModalRoleSelect
-  | ModalMentionableSelect;
+  | ModalMentionableSelect
+  | ModalRadioGroup
+  | ModalCheckbox
+  | ModalCheckboxGroup;
 
 export type ModalLabelComponent = DistributiveOmit<ModalComponentBase & { required?: boolean, disabled?: never }, "disabled">;
 
@@ -49,8 +56,11 @@ export type FieldIndex = { index: number, customId: string }
 export type TextInputFieldIndex = FieldIndex & { type: "text_input" }
 export type SelectMenuFieldIndex = FieldIndex & { type: "select_menu" }
 export type FileUploadFieldIndex = FieldIndex & { type: "file_upload" }
+export type RadioGroupFieldIndex = FieldIndex & { type: "radio_group" }
+export type CheckboxFieldIndex = FieldIndex & { type: "checkbox" }
+export type CheckboxGroupFieldIndex = FieldIndex & { type: "checkbox_group" }
 
-export type ModalFieldIndex = TextInputFieldIndex | SelectMenuFieldIndex | FileUploadFieldIndex;
+export type ModalFieldIndex = TextInputFieldIndex | SelectMenuFieldIndex | FileUploadFieldIndex | RadioGroupFieldIndex | CheckboxFieldIndex | CheckboxGroupFieldIndex;
 
 export function MessageComponentModule(options: MessageComponentModuleOptions) {
     return function<T extends Function>(constructor: T) {
@@ -139,6 +149,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setTextInputComponent(textInput);
 
                 break;
+
             case "string_select":
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId(component.customId)
@@ -152,6 +163,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setStringSelectMenuComponent(selectMenu);
 
                 break;
+
             case "user_select":
                 const userSelectMenu = new UserSelectMenuBuilder()
                     .setCustomId(component.customId);
@@ -165,6 +177,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setUserSelectMenuComponent(userSelectMenu);
 
                 break;
+
             case "channel_select":
                 const channelSelectMenu = new ChannelSelectMenuBuilder()
                     .setCustomId(component.customId);
@@ -179,6 +192,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setChannelSelectMenuComponent(channelSelectMenu);
 
                 break;
+
             case "role_select":
                 const roleSelectMenu = new RoleSelectMenuBuilder()
                     .setCustomId(component.customId);
@@ -192,6 +206,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setRoleSelectMenuComponent(roleSelectMenu);
 
                 break;
+
             case "mentionable_select":
                 const mentionableSelectMenu = new MentionableSelectMenuBuilder()
                     .setCustomId(component.customId);
@@ -206,6 +221,7 @@ export function ModalLabel(options: ModalLabelOptions) {
                 label.setMentionableSelectMenuComponent(mentionableSelectMenu);
 
                 break;
+
             case "file_upload":
                 const fileUpload = new FileUploadBuilder()
                     .setCustomId(component.customId)
@@ -215,6 +231,42 @@ export function ModalLabel(options: ModalLabelOptions) {
                 if ("required" in component) fileUpload.setRequired(component.required!);
 
                 label.setFileUploadComponent(fileUpload);
+
+                break;
+            
+            case "radio_group":
+                const radioGroup = new RadioGroupBuilder()
+                    .setCustomId(component.customId)
+                    .addOptions(component.options);
+                
+                if ("required" in component) radioGroup.setRequired(component.required!);
+
+                label.setRadioGroupComponent(radioGroup);
+
+                break;
+            
+            case "checkbox":
+                const checkbox = new CheckboxBuilder()
+                    .setCustomId(component.customId);
+                
+                if ("default" in component) checkbox.setDefault(component.default!);
+
+                label.setCheckboxComponent(checkbox);
+
+                break;
+
+            case "checkbox_group":
+                const checkboxGroup = new CheckboxGroupBuilder()
+                    .setCustomId(component.customId)
+                    .addOptions(component.options);
+
+                if (typeof component.minValues == "number") checkboxGroup.setMinValues(component.minValues);
+                if (typeof component.maxValues == "number") checkboxGroup.setMaxValues(component.maxValues);
+                if ("required" in component) checkboxGroup.setRequired(component.required!);
+
+                label.setCheckboxGroupComponent(checkboxGroup);
+
+                break;
         }
 
         components.push({ customId: component.customId, component: label, outerType: "label", innerType: component.type });
@@ -223,7 +275,7 @@ export function ModalLabel(options: ModalLabelOptions) {
     }
 }
 
-export function ModalTextDisplay(options: ModalTextDisplayOptions) {
+export function ModalTextDisplay(options: ModalTextDisplay) {
     return function<T extends Function>(constructor: T) {
         const components = Reflect.getMetadata(MODAL_COMPONENTS_KEY, constructor) as ModalComponentData[] ?? [];
 
@@ -263,5 +315,35 @@ export function FileUploadFieldInjection(customId: string) {
         fields.push({ index: parameterIndex, customId, type: "file_upload" });
 
         Reflect.defineMetadata(MODAL_FILE_UPLOAD_VALUE_INDEX_KEY, fields, target);
+    }
+}
+
+export function RadioGroupFieldInjection(customId: string) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+        const fields = Reflect.getMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
+
+        fields.push({ index: parameterIndex, customId, type: "radio_group" });
+
+        Reflect.defineMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, fields, target);
+    }
+}
+
+export function CheckboxFieldInjection(customId: string) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+        const fields = Reflect.getMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
+
+        fields.push({ index: parameterIndex, customId, type: "checkbox" });
+
+        Reflect.defineMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, fields, target);
+    }
+}
+
+export function CheckboxGroupFieldInjection(customId: string) {
+    return function (target: Object, _propertyKey: string | symbol | undefined, parameterIndex: number) {
+        const fields = Reflect.getMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, target) as ModalFieldIndex[] ?? [];
+
+        fields.push({ index: parameterIndex, customId, type: "checkbox_group" });
+
+        Reflect.defineMetadata(MODAL_SELECT_MENU_VALUE_INDEX_KEY, fields, target);
     }
 }

@@ -1,13 +1,16 @@
-import { ActionRowBuilder, Interaction, LabelBuilder, ModalActionRowComponentBuilder, ModalBuilder, ModalSubmitFields, ModalSubmitInteraction, RepliableInteraction, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder } from "discord.js";
+import { ActionRowBuilder, CheckboxBuilder, CheckboxGroupBuilder, Interaction, LabelBuilder, ModalActionRowComponentBuilder, ModalBuilder, ModalSubmitFields, ModalSubmitInteraction, RadioGroupBuilder, RepliableInteraction, StringSelectMenuBuilder, TextDisplayBuilder, TextInputBuilder } from "discord.js";
 import { MODAL_COMPONENTS_KEY, MODAL_OPTIONS_KEY, ModalComponentBuilder, ModalComponentData, ModalOptions } from "..";
 import crypto from "node:crypto";
 import { Util } from "../../utils/Util";
 
 export type LabelValueOverride = { type: 'label', customId: string, label?: string, description?: string }
 export type TextDisplayValueOverride = { type: 'text_display', customId: string, content: string }
-export type StringSelectValueOverride = { type: 'string_select', customId: string, values: { label: string, value: string, description?: string, emoji?: string }[] }
+export type StringSelectValueOverride = { type: 'string_select', customId: string, options: { label: string, value: string, description?: string, emoji?: string }[] }
+export type RadioGroupValueOverride = { type: 'radio_group', customId: string, required?: boolean, options: { label: string, value: string, description?: string, default?: boolean }[] }
+export type CheckboxGroupValueOverride = { type: 'checkbox_group', customId: string, minValues?: number, maxValues?: number, required?: boolean, options: { label: string, value: string, description?: string, default?: boolean }[] }
+export type CheckboxValueOverride = { type: 'checkbox', customId: string, default?: boolean }
 export type TextInputValueOverride = { type: 'text_input', customId: string, value: string };
-export type ModalValueOverride = StringSelectValueOverride | TextInputValueOverride | LabelValueOverride | TextDisplayValueOverride;
+export type ModalValueOverride = StringSelectValueOverride | TextInputValueOverride | LabelValueOverride | TextDisplayValueOverride | RadioGroupValueOverride | CheckboxGroupValueOverride | CheckboxValueOverride;
 
 /**
  * The base class for modals created with the {@link Modal} decorator. This class is used to create a modal from the options and components defined in the class, and to override the default options and component values with new options and values when creating the modal.
@@ -107,9 +110,45 @@ export class BaseModal {
                     if (matchingStringSelectValue) {
                         const updatedComponent = StringSelectMenuBuilder.from(component.data.component.toJSON());
 
-                        updatedComponent.setOptions(matchingStringSelectValue.values);
+                        updatedComponent.setOptions(matchingStringSelectValue.options);
 
                         component.setStringSelectMenuComponent(updatedComponent);
+                    }
+                } else if (component.data.component instanceof RadioGroupBuilder) {
+                    const matchingRadioGroupValue = values.find(v => v.customId === component.data.component!.data.custom_id && v.type === 'radio_group') as RadioGroupValueOverride;
+
+                    if (matchingRadioGroupValue) {
+                        const updatedComponent = new RadioGroupBuilder(component.data.component.toJSON());
+
+                        if ("required" in matchingRadioGroupValue) updatedComponent.setRequired(matchingRadioGroupValue.required!);
+
+                        updatedComponent.setOptions(matchingRadioGroupValue.options);
+
+                        component.setRadioGroupComponent(updatedComponent);
+                    }
+                } else if (component.data.component instanceof CheckboxGroupBuilder) {
+                    const matchingCheckboxGroupValue = values.find(v => v.customId === component.data.component!.data.custom_id && v.type === 'checkbox_group') as CheckboxGroupValueOverride;
+
+                    if (matchingCheckboxGroupValue) {
+                        const updatedComponent = new CheckboxGroupBuilder(component.data.component.toJSON());
+
+                        if (typeof matchingCheckboxGroupValue.minValues == "number") updatedComponent.setMinValues(matchingCheckboxGroupValue.minValues);
+                        if (typeof matchingCheckboxGroupValue.maxValues == "number") updatedComponent.setMaxValues(matchingCheckboxGroupValue.maxValues);
+                        if ("required" in matchingCheckboxGroupValue) updatedComponent.setRequired(matchingCheckboxGroupValue.required!);
+
+                        updatedComponent.setOptions(matchingCheckboxGroupValue.options);
+
+                        component.setCheckboxGroupComponent(updatedComponent);
+                    }
+                } else if (component.data.component instanceof CheckboxBuilder) {
+                    const matchingCheckboxValue = values.find(v => v.customId === component.data.component!.data.custom_id && v.type === 'checkbox') as CheckboxValueOverride;
+
+                    if (matchingCheckboxValue) {
+                        const updatedComponent = new CheckboxBuilder(component.data.component.toJSON());
+
+                        if ("default" in matchingCheckboxValue) updatedComponent.setDefault(matchingCheckboxValue.default!);
+
+                        component.setCheckboxComponent(updatedComponent);
                     }
                 }
 
