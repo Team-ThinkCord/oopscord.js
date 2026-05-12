@@ -381,10 +381,7 @@ export class DiscordApp {
                             "user_select": itr.fields.getSelectedUsers,
                             "role_select": itr.fields.getSelectedRoles,
                             "mentionable_select": itr.fields.getSelectedMentionables,
-                            "channel_select": itr.fields.getSelectedChannels,
-                            "radio_group": itr.fields.getRadioGroup,
-                            "checkbox_group": itr.fields.getCheckboxGroup,
-                            "checkbox": itr.fields.getCheckbox
+                            "channel_select": itr.fields.getSelectedChannels
                         };
                         
                         const label = modalComponents.find(c => c.outerType == "label" && c.innerType.endsWith("select") && c.component.data.component?.data?.custom_id == fieldIndex.customId) as ModalLabelComponentData;
@@ -401,6 +398,18 @@ export class DiscordApp {
                         break;
                     case "file_upload":
                         args[arg.index] = itr.fields.getUploadedFiles(fieldIndex.customId);
+
+                        break;
+                    case "radio_group":
+                        args[arg.index] = itr.fields.getRadioGroup(fieldIndex.customId);
+
+                        break;
+                    case "checkbox":
+                        args[arg.index] = itr.fields.getCheckbox(fieldIndex.customId);
+
+                        break;
+                    case "checkbox_group":
+                        args[arg.index] = itr.fields.getCheckboxGroup(fieldIndex.customId);
 
                         break;
                 }
