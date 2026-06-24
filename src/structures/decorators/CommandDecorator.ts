@@ -3,7 +3,7 @@ import { ChannelType, APIApplicationCommandOptionChoice, ApplicationIntegrationT
 import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_GUILD_KEY, COMMAND_PRIVATE_KEY, COMMAND_OPTIONS_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_TYPE_KEY, COMMAND_SUBCOMMANDS_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, INTERACTION_INTEGRATION_TYPES_KEY, CONTEXT_MENU_TYPE_KEY } from "./Constants";
 import { InteractionType, SlashCommandOptions } from "../Constants";
 
-export type CommandModuleOptions = { commands: (new (...args: any[]) => any)[] }
+export type CommandModuleOptions = { commands?: (new (...args: any[]) => any)[] }
 export type CommandOptions = { name: string, description: string }
 export type ContextMenuOptions = { name: string, type: ContextMenuCommandType }
 export type BaseOptions = { name: string, description: string, required?: boolean }
@@ -17,7 +17,7 @@ export type OptionsIndex = { name: string, getMethod: keyof Omit<CommandInteract
 export function CommandModule(options: CommandModuleOptions): ClassDecorator {
     return function <TFunction extends Function>(constructor: TFunction) {
         Reflect.defineMetadata(MODULE_TYPE_KEY, ModuleType.COMMAND, constructor);
-        Reflect.defineMetadata(COMMAND_MODULE_COMMANDS_KEY, options.commands, constructor);
+        Reflect.defineMetadata(COMMAND_MODULE_COMMANDS_KEY, options.commands ?? [], constructor);
     }
 }
 

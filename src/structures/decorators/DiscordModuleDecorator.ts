@@ -1,9 +1,13 @@
 import { ClientEvents, ClientOptions } from "discord.js";
-import { DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, MODULE_TYPE_KEY } from "./Constants";
+import { DICSORD_MODULE_OPTIONS_KEY, INTERNAL_EVENTS_KEY, MODULE_TYPE_KEY } from "./Constants";
+import { Listener } from "../components/Listener";
 
 export interface ModuleOptions extends ClientOptions {
     token: string;
     imports: (new (...args: any[]) => any)[];
+    commands?: (new (...args: any[]) => any)[];
+    components?: (new (...args: any[]) => any)[];
+    listeners?: typeof Listener[];
     test?: {
         enable: boolean,
         guild: null | string
@@ -17,9 +21,12 @@ export interface ModuleOptions extends ClientOptions {
 export const defaultModuleOptions: ModuleOptions = {
     token: "",
     imports: [],
+    commands: [],
+    components: [],
+    listeners: [],
     test: {
         enable: false,
-        guild: null as string | null,
+        guild: null,
     },
     disableCache: false,
     intents: []
@@ -53,33 +60,6 @@ export function DiscordModule(option1: ModuleOptions) {
         });
 
         Reflect.defineMetadata(DICSORD_MODULE_OPTIONS_KEY, options, constructor);
-    }
-}
-
-
-/**
- * Decorator that registers a method as an event handler for a Discord client event.
- * 
- * @param eventName - The name of the Discord client event to listen for
- * @returns A method decorator that registers the decorated method as an event handler
- * 
- * @example
- * ```typescript
- * class MyModule {
- *   ＠EventHandler('messageCreate')
- *   onMessageCreate(message: Message) {
- *     // Handle message creation
- *   }
- * }
- * ```
- */
-export function EventHandler(eventName: keyof ClientEvents): MethodDecorator {
-    return function<T>(target: Object, propertyKey: string | symbol, propertyDescriptor: TypedPropertyDescriptor<T>) {
-        const events: DiscordModuleEvents[] = Reflect.getMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, target.constructor) ?? [];
-
-        events.push({ eventName, methodName: propertyKey as string });
-
-        Reflect.defineMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, events, target.constructor);
     }
 }
 

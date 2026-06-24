@@ -21,8 +21,11 @@ export const CONTEXT_MENU_TYPE_KEY = Symbol("context_menu_type");
 export const OPTIONS_PARAMETER_INDEX_KEY = Symbol("options_parameter_index");
 
 export const DICSORD_MODULE_OPTIONS_KEY = Symbol("options");
-export const DISCORD_MODULE_INTERNAL_EVENTS_KEY = Symbol("internal_events");
-export const DISCORD_MODULE_EXTERNAL_EVENTS_KEY = Symbol("external_events");
+
+export const EVENT_MODULE_LISTENERS_KEY = Symbol("event_module_listeners");
+
+export const INTERNAL_EVENTS_KEY = Symbol("internal_events");
+export const EXTERNAL_EVENTS_KEY = Symbol("external_events");
 
 export const MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY = Symbol("components");
 
@@ -40,5 +43,6 @@ export const MODAL_FILE_UPLOAD_VALUE_INDEX_KEY = Symbol("field_index");
 
 export enum ModuleType {
     COMMAND,
-    MESSAGE_COMPONENT
+    MESSAGE_COMPONENT,
+    EVENT,
 }
