@@ -1,13 +1,16 @@
 {
-  "name": "tdis",
-  "version": "0.0.4",
-  "description": "A lightweight, easy command handler.",
+  "name": "oopscord.js",
+  "version": "0.0.29",
+  "description": "An easy way to make discord apps in typescript.",
   "main": "dist",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublishOnly": "tsc"
   },
-  "repository": "git+https://github.com/Team-ThinkCord/tDis.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Team-ThinkCord/oopscord.js.git"
+  },
   "keywords": [
     "discord",
     "discord.js",
@@ -23,11 +26,13 @@
   "homepage": "https://github.com/Team-ThinkCord/tDis#readme",
   "private": false,
   "dependencies": {
-    "discord.js": "^14.14.1",
     "reflect-metadata": "^0.1.14"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
+    "@types/node": "^20.19.35",
+    "discord.js": "14.26.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18",
     "yarn": "^1.22.21"
   }
 }
