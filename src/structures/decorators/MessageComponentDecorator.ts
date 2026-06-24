@@ -6,7 +6,7 @@ import { InteractionType } from "../Constants";
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
 export type ButtonOptions = InteractionButtonOptions | LinkButtonOptions | PremiumButtonOptions;
-export type MessageComponentModuleOptions = { components: (new (...args: any[]) => any)[] }
+export type MessageComponentModuleOptions = { components?: (new (...args: any[]) => any)[] }
 export type InteractionButtonOptions = { customId: string, disabled?: boolean, label?: string, emoji?: ComponentEmojiResolvable, style: Exclude<Exclude<ButtonStyle, ButtonStyle.Link>, ButtonStyle.Premium> }
 export type LinkButtonOptions = { label?: string, disabled?: boolean, emoji?: ComponentEmojiResolvable, style: ButtonStyle.Link, url: string }
 export type PremiumButtonOptions = { style: ButtonStyle.Premium, disabled?: boolean, skuId: string }
@@ -65,7 +65,7 @@ export type ModalFieldIndex = TextInputFieldIndex | SelectMenuFieldIndex | FileU
 export function MessageComponentModule(options: MessageComponentModuleOptions) {
     return function<T extends Function>(constructor: T) {
         Reflect.defineMetadata(MODULE_TYPE_KEY, ModuleType.MESSAGE_COMPONENT, constructor);
-        Reflect.defineMetadata(MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, options.components, constructor);
+        Reflect.defineMetadata(MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, options.components ?? [], constructor);
     }
 }
 

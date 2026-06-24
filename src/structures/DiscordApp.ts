@@ -1,11 +1,12 @@
 import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientEvents, Collection, ContextMenuCommandBuilder, ContextMenuCommandInteraction, ContextMenuCommandType, Interaction, LabelBuilder, ModalSubmitInteraction, REST, SlashCommandBuilder } from "discord.js";
 import { ApplicationIntegrationType, RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v10";
 import { DiscordModuleEvents,  ModuleOptions } from "./decorators/DiscordModuleDecorator";
-import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, DISCORD_MODULE_INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, CONTEXT_MENU_TYPE_KEY, INTERACTION_INTEGRATION_TYPES_KEY, MODAL_SELECT_MENU_VALUE_INDEX_KEY, MODAL_FILE_UPLOAD_VALUE_INDEX_KEY, MODAL_COMPONENTS_KEY } from "./decorators/Constants";
+import { COMMAND_DESCRIPTION_KEY, COMMAND_NAME_KEY, COMMAND_PRIVATE_KEY, DICSORD_MODULE_OPTIONS_KEY, INTERNAL_EVENTS_KEY, INTERACTION_TYPE_KEY, COMMAND_OPTIONS_KEY, COMMAND_PRIVATE_GUILD_KEY, INTERACTION_RUN_METHOD_KEY, OPTIONS_PARAMETER_INDEX_KEY, INTERACTION_PARAMETER_INDEX_KEY, COMMAND_SUBCOMMAND_GROUPS_KEY, COMMAND_SUBCOMMANDS_KEY, MODULE_TYPE_KEY, ModuleType, COMMAND_MODULE_COMMANDS_KEY, MESSAGE_COMPONENT_MODULE_COMPONENTS_KEY, BUTTON_OPTIONS_KEY, SELECT_MENU_OPTIONS_KEY, MODAL_OPTIONS_KEY, MODAL_TEXT_INPUT_VALUE_INDEX_KEY, CONTEXT_MENU_TYPE_KEY, INTERACTION_INTEGRATION_TYPES_KEY, MODAL_SELECT_MENU_VALUE_INDEX_KEY, MODAL_FILE_UPLOAD_VALUE_INDEX_KEY, MODAL_COMPONENTS_KEY, EVENT_MODULE_LISTENERS_KEY } from "./decorators/Constants";
 import { InteractionType, SlashCommandOptions } from "./Constants";
 import { ContextMenuOptions, OptionsIndex } from "./decorators/CommandDecorator";
 import { FieldIndex, ModalComponentData, ModalFieldIndex, ModalLabelComponentData, Plugin } from ".";
 import { Util } from "../utils/Util";
+import { Listener } from "./components/Listener";
 
 /** The logger interface used for logging application events and errors. You can implement this interface to create a custom logger or use the default console logger. */
 export interface Logger {
@@ -416,11 +417,13 @@ export class DiscordApp {
             }
         });
 
-        if (runMethod == undefined) throw new TypeError("Failed to get the run method. Did you add the @Run decorator?");
+        // if (runMethod == undefined) throw new TypeError("Failed to get the run method. Did you add the @Run decorator?");
 
         let cmd = new modal(...args);
 
-        cmd[runMethod]();
+        if (runMethod) {
+            cmd[runMethod]();
+        }
     }
 
     /**
@@ -451,12 +454,16 @@ export class DiscordApp {
      */
     #init() {
         const options = Reflect.getMetadata(DICSORD_MODULE_OPTIONS_KEY, this.#moduleFunction) as ModuleOptions;
-        const internalEvents = Reflect.getMetadata(DISCORD_MODULE_INTERNAL_EVENTS_KEY, this.#moduleFunction) as DiscordModuleEvents[];
+        const internalEvents = Reflect.getMetadata(INTERNAL_EVENTS_KEY, this.#moduleFunction) as DiscordModuleEvents[];
         // const externalEvents = Reflect.getMetadata(DISCORD_MODULE_EXTERNAL_EVENTS_KEY, this.#moduleFunction) as ExternalModuleEvents[];
 
         this.#client = new Client(options);
         this.#module = new this.#moduleFunction(this.#client, this.#appOptions.logger!);
         this.#moduleOptions = options;
+        this.#commands = [];
+        this.#buttons = [];
+        this.#selectMenus = [];
+        this.#modals = [];
 
         const module = this.#module as { [key: string]: any };
 
@@ -471,7 +478,6 @@ export class DiscordApp {
 
             switch (moduleType) {
                 case ModuleType.COMMAND:
-                    if (!this.#commands) this.#commands = [];
                     this.#commands.push(...Reflect.getMetadata(COMMAND_MODULE_COMMANDS_KEY, module));
 
                     break;
@@ -481,17 +487,32 @@ export class DiscordApp {
                     const selectMenus = components.filter(c => Reflect.getMetadata(INTERACTION_TYPE_KEY, c) == InteractionType.SELECT_MENU);
                     const modals = components.filter(c => Reflect.getMetadata(INTERACTION_TYPE_KEY, c) == InteractionType.MODAL_SUBMIT);
 
-                    if (!this.#buttons) this.#buttons = [];
                     this.#buttons.push(...buttons);
-
-                    if (!this.#selectMenus) this.#selectMenus = [];
                     this.#selectMenus.push(...selectMenus);
-
-                    if (!this.#modals) this.#modals = [];
                     this.#modals.push(...modals);
 
                     break;
-            }
+                case ModuleType.EVENT:
+                    const moduleEvents = (Reflect.getMetadata(INTERNAL_EVENTS_KEY, module) ?? []) as DiscordModuleEvents[];
+
+                    moduleEvents.forEach(e => {
+                        const moduleInstance = new module(this.#client, this.#appOptions.logger!) as { [key: string]: any };
+
+                        this.#client.on(e.eventName, (...args: any[]) => moduleInstance[e.methodName as keyof typeof moduleInstance](...args));
+                    });
+
+                    const listeners = (Reflect.getMetadata(EVENT_MODULE_LISTENERS_KEY, module) ?? []) as (new (...args: any[]) => Listener)[];
+
+                    listeners.forEach(listener => {
+                        const listenerInstance = new listener(this.#client, this.#appOptions.logger!) as { [key: string]: any };
+
+                        const listenerEvents = (Reflect.getMetadata(INTERNAL_EVENTS_KEY, listener) ?? []) as DiscordModuleEvents[];
+
+                        listenerEvents.forEach(e => {
+                            this.#client.on(e.eventName, (...args: any[]) => listenerInstance[e.methodName as keyof typeof listenerInstance](...args));
+                        });
+                    });
+            };
         });
     }
 
